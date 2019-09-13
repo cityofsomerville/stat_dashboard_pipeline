@@ -1,0 +1,11 @@
+# Python/setuptools.
+/*.egg-info
+/dist/
+*.pyc
+.eggs/
+
+# OS
+.DS_Store
+venv/
+
+# Repo
