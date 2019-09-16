@@ -1,0 +1,7 @@
+# Somerville Data Pipeline configurations
+
+# SFTP credentials
+sftp_server: ''
+sftp_user: ''
+sftp_pass: ''
+sftp_port: 22
