@@ -1,0 +1,4 @@
+requests == 2.22.0
+pandas == 0.25.1
+sodapy == 1.5.4
+pylint == 2.3.1
