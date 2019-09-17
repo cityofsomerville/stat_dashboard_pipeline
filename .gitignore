@@ -10,3 +10,6 @@
 # IDE
 .vscode/
 venv/
+
+# Repo
+tmp/*.txt
