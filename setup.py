@@ -1,13 +1,13 @@
 from setuptools import setup
 
 with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+    REQUIREMENTS = f.read().splitlines()
 
 setup(
     name='Stat Dashboard Pipeline',
     description='SomerStat Dashboard data pipeline ingest and upload',
     version='0.1',
-    install_requires=requirements,
+    install_requires=REQUIREMENTS,
     url='',
     author='Pulp',
     author_email='info@itspulp.com',
