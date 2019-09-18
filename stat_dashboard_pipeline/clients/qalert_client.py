@@ -31,15 +31,16 @@ class QAlertClient():
         Qsend_API_key, sep = ""
         """
         print(self._credentials)
-        current_date = requests.utils.quote(datetime.datetime.now().strftime("%m%d%Y"))
+        current_date = requests.utils.quote(datetime.datetime.now().strftime("%m/%d/%Y"))
         previous_date = requests.utils.quote((datetime.datetime.now() - timedelta(days=10)).strftime("%m/%d/%Y"))
 
         url = os.path.join(
-            self._credentials[qscend_url], 'qalert/api/v1/requests',
+            self._credentials['qscend_url'], 'qalert/api/v1/requests',
             'dump',
-            '?start={current_date}&end={previous_date}'.format(
+            '?start={current_date}&end={previous_date}"&key={api_key}'.format(
                 current_date=current_date,
-                previous_date=previous_date
+                previous_date=previous_date,
+                api_key=self._credentials['qscend_key']
             )
         )
         print(url)
