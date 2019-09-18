@@ -13,3 +13,4 @@ venv/
 
 # Repo
 tmp/*.txt
+config.yaml
