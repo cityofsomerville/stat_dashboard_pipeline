@@ -25,10 +25,30 @@ class QAlertClient():
 
     def connect(self):
         """
-        connection looks like:
-        "{URL}/qalert/api/v1/requests/dump/?start=", 
-        month(x), "%2F", day(x), "%2F", year(x),"&end=", month(x+9), "%2F", day(x+9), "%2F", year(x+9), "&key=", 
-        Qsend_API_key, sep = ""
+        # Connection looks like:
+        url = self._credentials['qscend_url'] + "/qalert/api/v1/requests/get/"
+        querystring = {
+            "key": self._credentials['qscend_key'],
+            "output": "JSON",
+            "createDateMin": "9/16/19"
+        }
+        headers = {
+            'cache-control': "no-cache",
+            }
+
+        response = requests.get(
+            url, 
+            headers=headers, 
+            params=querystring
+        )
+
+        # querystring for single ID activity:
+        querystring = {
+            "key": self._credentials['qscend_key'],
+            "output": "JSON",
+            "id": ${ID_NUMBER},
+            "activity": "true"
+        }
         """
         print(self._credentials)
         current_date = requests.utils.quote(datetime.datetime.now().strftime("%m/%d/%Y"))
