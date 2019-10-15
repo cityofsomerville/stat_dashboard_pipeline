@@ -12,7 +12,8 @@ class QAlertClient():
     def __init__(self):
         self.credentials = self.__load_credentials()
 
-    def __load_credentials(self):
+    @staticmethod
+    def __load_credentials():
         # TODO: build into Auth methods
         auth = Auth()
         return auth.credentials()
@@ -39,7 +40,7 @@ class QAlertClient():
             # TODO: Better error handling, TBD
             print('[ERROR] : Qscend API')
             print(response.text)
-            return
+            return None
         return response.text
 
     @staticmethod

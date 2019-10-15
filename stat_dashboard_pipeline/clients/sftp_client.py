@@ -16,12 +16,14 @@ class SFTPClient():
         self.connection = None
         self.filename = None
 
-    def __load_credentials(self):
+    @staticmethod
+    def __load_credentials():
         # TODO: build into Auth methods
         auth = Auth()
         return auth.credentials()
 
-    def __generate_filename(self, days_prior=1):
+    @staticmethod
+    def __generate_filename(days_prior=1):
         """
         File nomenclature is similar to: PermitExport09032019.txt
         """
@@ -33,7 +35,10 @@ class SFTPClient():
         transport = paramiko.Transport(
             sock=(self._credentials['sftp_server'], self._credentials['sftp_port'])
         )
-        transport.connect(username=self._credentials['sftp_user'], password=self._credentials['sftp_pass'])
+        transport.connect(
+            username=self._credentials['sftp_user'],
+            password=self._credentials['sftp_pass']
+        )
         return paramiko.SFTPClient.from_transport(transport)
 
     def __remote_path(self):
