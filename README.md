@@ -28,5 +28,10 @@ stat_pipeline
 python setup.py test
 ```
 
+## Lint
+```
+python setup.py lint
+```
+
 
 (c)2019 City of Somerville
