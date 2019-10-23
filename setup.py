@@ -1,9 +1,5 @@
 import os
 from setuptools import setup, Command
-# import distutils.cmd
-# import distutils.log
-# import setuptools
-# import subprocess
 
 with open('requirements.txt') as f:
     REQUIREMENTS = f.read().splitlines()
