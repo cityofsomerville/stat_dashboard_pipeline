@@ -49,7 +49,7 @@ class QAlertClient():
             (datetime.datetime.now() - timedelta(days=time_window)).strftime("%m/%d/%Y")
         )
 
-    def get_by_date(self, ticket_id=None, time_window=7):
+    def get_by_date_range(self, ticket_id=None, time_window=7):
         """
         Get all tickets from last n dates (default 7)
         -or-
