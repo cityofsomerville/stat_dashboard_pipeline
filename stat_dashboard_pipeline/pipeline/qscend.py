@@ -11,32 +11,39 @@ from stat_dashboard_pipeline.clients.qalert_client import QAlertClient
 class QScendPipeline():
 
     def __init__(self):
+        self.qclient = QAlertClient()
+        self.raw = None
+        # Intermediate Data
         self.departments = {}
         self.types = {}
-        self.activities = {}
+        self.activity_codes = {}
+        self.activity = {}
+        # Final
         self.requests = {}
-        # self.activity = {}
-        self.raw = None
-        # self.cleaned = None
-        self.qclient = QAlertClient()
 
     def run(self):
-        # """
-        # Semi-temp master run funct
-        # """
-        # self.groom_depts()
-        # self.groom_types()
-        # self.get_type_ancestry()
+        """
+        Semi-temp master run funct
+        """
+        self.groom_depts()
+        self.groom_types()
+        self.get_type_ancestry()
 
         # Get Changes
         self.get_changes()
-        # self.groom_changes()
-
-        self.infer_activities()
+        self.groom_changes()
+        self.infer_activity_codes()
+        self.groom_activites()
+        self.munge_activities_into_requests()
+        pprint.pprint(self.requests)
 
     def get_changes(self):
+        """
+        Call and clean response from QAlertClient class
+        """
         self.raw = json.loads(self.qclient.get_changes())
         # For the sake of tidyness, let's delete the unneeded keys
+        # TODO: Date handling
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
         del self.raw['submitter'] # Contains PII
@@ -45,27 +52,64 @@ class QScendPipeline():
         except KeyError:
             pass
 
-
     def groom_changes(self):
         """
         Get the data from the QScendAPI Client, munge into a usable dict
+        Create usable FE dict
         """
+        # TODO: Check origins (ios, call center, QAlert Mobile iOS, Control Panel)
         raw_requests = self.raw['request']
 
         for request in raw_requests:
-            # Delete PII, convert to dict keyed on ID
+            # Ditch PII, convert to dict keyed on ID
             self.requests[request['id']] = {
-                'last_modified': request['displayLastAction'],
+                'last_modified': request['displayLastAction'], # TODO: Date handling
                 'dept': request['dept'],
                 'typeName': request['typeName'],
                 'latitude': request['latitude'],
                 'longitude': request['longitude'],
                 'status': self.get_statuses(request['status']),
-                'type': self.types[request['typeId']]
+                'type': self.types[request['typeId']],
+                'origin': request['origin']
             }
+            # TODO: remove
             break
-        pprint.pprint(self.requests)
-        # return changes
+
+    def groom_activites(self):
+        """
+        Create a dict of arrays of dicts, keyed on request ID
+
+        self.activity = {
+            request id: [
+                {activity},
+                {activity}
+            ]
+        }
+        """
+        # TODO: (Maybe) routeId / Comment parsing
+        # TODO: Date handling
+        raw_activities = self.raw['activity']
+        for activity in raw_activities:
+            # Delete unused
+            del activity['attachments']
+            del activity['notify']
+            del activity['user']
+            del activity['files']
+            del activity['isEditable']
+            act_id = activity['requestId']
+            # Get or set extant value
+            activity_list = self.activity.setdefault(act_id, [])
+            activity_list.append(activity)
+            # Sort by ID (appears to increment)
+            sorted_list = sorted(activity_list, key=lambda i: (i['id']))
+            self.activity[act_id] = sorted_list
+
+    def munge_activities_into_requests(self):
+        """
+        Add the activities into the requests dict
+        TODO: Can be collapsed into above func and self.activity can be deleted
+        """
+        return
 
     @staticmethod
     def get_statuses(status_no):
@@ -73,6 +117,7 @@ class QScendPipeline():
         From QScendAPI docs:
         valid values are 0 (open), 1 (closed), 3 (in progress), and 4 (on hold).
         """
+        # TODO: move to config
         valid_statuses = {
             0: 'Open',
             1: 'Closed',
@@ -89,36 +134,33 @@ class QScendPipeline():
 
     def groom_types(self):
         """
-        Call API, get raw types, munge into a dict
+        Call API, get raw types, munge into dict
         """
         raw_types = json.loads(self.qclient.get_types())
         for q_type in raw_types:
             type_id = q_type['id']
-            # Unneeded values,
-            # 'id' becomes the key
-            # 'priorityValue' is always '2'
+            # Unneeded values
             # TODO: 'isPrivate'?
             del q_type['id']
             del q_type['priorityValue']
 
             # Department name
             if q_type['dept'] is not 0:
-                # Add department name
                 department = self.departments[q_type['dept']]
                 q_type['dept'] = department
             self.types[type_id] = q_type
 
-    def infer_activities(self):
+    def infer_activity_codes(self):
+        """
+        Infer Activity Names from 'activity' return from API
+        """
         raw_activities = self.raw['activity']
         for activity in raw_activities:
-            print(activity)
-            if self.activities.get('code') is not None and self.activities['code'] != activity['codeDesc']:
-                print('VALUEERR')
-                print(self.activities['code'])
-                print(activity['codeDesc'])
-            self.activities['code'] = activity['codeDesc']
-            # print(activity['code'])
-            print('------')
+            if self.activity_codes.get('code') is not None and \
+            self.activity_codes['code'] != activity['codeDesc']:
+                # TODO: Err handling
+                continue
+            self.activity_codes[activity['code']] = activity['codeDesc']
 
     def get_type_ancestry(self):
         """

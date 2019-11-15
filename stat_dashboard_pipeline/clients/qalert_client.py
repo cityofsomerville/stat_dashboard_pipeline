@@ -129,10 +129,3 @@ class QAlertClient():
             url,
             querystring
         )
-
-
-if __name__ == '__main__':
-    # TODO: remove
-    qac = QAlertClient()
-    get = qac.dump_date_data()
-    print(get)
