@@ -81,7 +81,8 @@ class QAlertClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'changes')
         querystring = {
-            "since": self._format_date(time_window)
+            "since": self._format_date(time_window),
+            "includeCustomFields": False
         }
 
         return self._generate_response(
@@ -113,6 +114,17 @@ class QAlertClient():
             "end": self._format_date()
         }
 
+        return self._generate_response(
+            url,
+            querystring
+        )
+
+    def get_departments(self):
+        """
+        Get Department Titles/IDs
+        """
+        url = os.path.join(self.credentials['qscend_url'], 'departments', 'get')
+        querystring = {}
         return self._generate_response(
             url,
             querystring
