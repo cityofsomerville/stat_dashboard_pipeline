@@ -17,7 +17,6 @@ class QScendPipeline():
         self.departments = {}
         self.types = {}
         self.activity_codes = {}
-        self.activity = {}
         self.categories = self.get_categories()
         # Final
         self.requests = {}
@@ -78,7 +77,7 @@ class QScendPipeline():
         """
         Create a dict of arrays of dicts, keyed on request ID
 
-        self.activity = {
+        self.requests = {
             request id: [
                 {activity},
                 {activity}
@@ -126,7 +125,7 @@ class QScendPipeline():
             del q_type['priorityValue']
 
             # Department name
-            if q_type['dept'] is not 0:
+            if q_type['dept'] != 0:
                 department = self.departments[q_type['dept']]
                 q_type['dept'] = department
             self.types[type_id] = q_type
@@ -152,14 +151,14 @@ class QScendPipeline():
         # Run types API, munge to dict
         for key, entry in self.types.items():
             # Add 'ancestor' key/value
-            if entry['parent'] is not 0:
+            if entry['parent'] != 0:
                 self.types[key]['ancestor'] = self._get_ancestor(self.types[key])
 
     def _get_ancestor(self, q_type):
         """
         Recurse to find ancestor node
         """
-        if q_type['parent'] is 0:
+        if q_type['parent'] == 0:
             return q_type
         parent_id = q_type['parent']
         return self._get_ancestor(self.types[parent_id])
@@ -182,7 +181,7 @@ class QScendPipeline():
     @staticmethod
     def get_categories():
         """
-        These are inhereted from the prior repo, and can 
+        These are inhereted from the prior repo, and can
         be updated in 'config/qscend_cat_id_key.json'
         """
         config = Config()

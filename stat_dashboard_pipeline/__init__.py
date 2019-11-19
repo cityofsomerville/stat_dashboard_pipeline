@@ -2,10 +2,11 @@
 SomerStat Daily Data Dashboard
 Pipeline
 """
-NAME = "stat_dashboard_pipeline"
 
 from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
+
+NAME = "stat_dashboard_pipeline"
 
 class Pipeline():
     """
@@ -20,7 +21,6 @@ class Pipeline():
         """
         Nominal running of pipeline code
         """
-        print(self.placeholder_string)
         # TODO: convert to returns, store client next
         self.qscend.run()
         self.citizenserve.run()

@@ -29,7 +29,7 @@ class Config():
 
     def __init__(self):
         self.qscend_category_file = CATEGORY_PATH
-    
+
     def qscend_categories(self):
         with open(self.qscend_category_file, 'r') as stream:
             try:

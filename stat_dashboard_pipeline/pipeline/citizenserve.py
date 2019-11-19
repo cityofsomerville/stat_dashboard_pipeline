@@ -21,7 +21,8 @@ class CitizenServePipeline():
         Semi-temp master run funct
         """
         temp_file = self.get_data()
-        self.groom_data(temp_file)
+        if temp_file is not None:
+            self.groom_data(temp_file)
 
     def groom_data(self, temp_file):
         """
@@ -44,17 +45,8 @@ class CitizenServePipeline():
                 self.types.add(row['PermitType'])
 
     def get_data(self):
-        # TODO: REPLACE
-        # try:
-        #     self.cs_client.download()
-        # except paramiko.ssh_exception.AuthenticationException:
-        #     # return
-        #     print('Credentials Bad')
-        # TODO: REMOVE
-        return '/Users/tenten/Desktop/stat_dashboard_pipeline/tmp/PermitExport09162019.txt'
-        # return self.cs_client.local_path()
-
-
-if __name__ == '__main__':
-    cspipe = CitizenServePipeline()
-    cspipe.run()
+        try:
+            self.cs_client.download()
+        except paramiko.ssh_exception.AuthenticationException:
+            return None
+        return self.cs_client.local_path()
