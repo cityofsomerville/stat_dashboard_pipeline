@@ -4,7 +4,7 @@ Pipeline
 """
 NAME = "stat_dashboard_pipeline"
 
-from stat_dashboard_pipeline.clients.sftp_client import SFTPClient
+from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
 
 class Pipeline():
@@ -13,8 +13,7 @@ class Pipeline():
 
     """
     def __init__(self):
-        self.placeholder_string = 'Hello Somerville'
-        self.citizenserve = SFTPClient()
+        self.citizenserve = CitizenServePipeline()
         self.qscend = QScendPipeline()
 
     def run(self):
@@ -22,7 +21,9 @@ class Pipeline():
         Nominal running of pipeline code
         """
         print(self.placeholder_string)
+        # TODO: convert to returns, store client next
         self.qscend.run()
+        self.citizenserve.run()
 
     def collect(self):
         return
