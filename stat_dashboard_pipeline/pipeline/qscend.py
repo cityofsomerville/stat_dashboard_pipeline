@@ -4,7 +4,6 @@ Grooming process for QScend Client
 Raw JSON API Dumps -> Socrata Storable JSON
 """
 import json
-import pprint
 
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
 from stat_dashboard_pipeline.config import Config
@@ -36,7 +35,6 @@ class QScendPipeline():
         self.groom_changes()
         self.infer_activity_codes()
         self.groom_activites()
-        pprint.pprint(self.requests)
 
     def get_changes(self):
         """
@@ -184,13 +182,8 @@ class QScendPipeline():
     @staticmethod
     def get_categories():
         """
-        These are inhereted from the prior repo, and can be updated in 'config/qscend_cat_id_key.json'
+        These are inhereted from the prior repo, and can 
+        be updated in 'config/qscend_cat_id_key.json'
         """
         config = Config()
         return config.qscend_categories()
-
-
-if __name__ == '__main__':
-    # TODO: Remove
-    qcl = QScendPipeline()
-    qcl.run()

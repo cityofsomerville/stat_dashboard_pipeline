@@ -27,5 +27,5 @@ class Pipeline():
     def collect(self):
         return
 
-    def groom(self):
+    def store(self):
         return
