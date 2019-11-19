@@ -7,7 +7,7 @@ import requests
 from stat_dashboard_pipeline.config import Auth
 
 
-class QAlertClient():
+class QScendClient():
 
     def __init__(self):
         self.credentials = self.__load_credentials()

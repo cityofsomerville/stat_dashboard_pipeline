@@ -8,6 +8,6 @@ sftp_pass: ''
 sftp_port: ''
 sftp_remote_dir: ''
 
-# QAlert
+# QAlert / QScend API
 qscend_key: ''
 qscend_url: ''

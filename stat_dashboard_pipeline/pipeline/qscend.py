@@ -6,13 +6,13 @@ Raw JSON API Dumps -> Socrata Storable JSON
 import json
 import pprint
 
-from stat_dashboard_pipeline.clients.qalert_client import QAlertClient
+from stat_dashboard_pipeline.clients.qscend_client import QScendClient
 from stat_dashboard_pipeline.config import Config
 
 class QScendPipeline():
 
     def __init__(self):
-        self.qclient = QAlertClient()
+        self.qclient = QScendClient()
         self.raw = None
         # Intermediate Data
         self.departments = {}
@@ -40,7 +40,7 @@ class QScendPipeline():
 
     def get_changes(self):
         """
-        Call and clean response from QAlertClient class
+        Call and clean response from QScendClient class
         """
         self.raw = json.loads(self.qclient.get_changes())
         # For the sake of tidyness, let's delete the unneeded keys
@@ -53,7 +53,7 @@ class QScendPipeline():
         Get the data from the QScendAPI Client, munge into a usable dict
         Create usable FE dict
         """
-        # TODO: Check origins (ios, call center, QAlert Mobile iOS, Control Panel)
+        # TODO: Check origins (ios, call center, QAlert Mobile iOS, Control Panel, etc.)
         raw_requests = self.raw['request']
 
         for request in raw_requests:
