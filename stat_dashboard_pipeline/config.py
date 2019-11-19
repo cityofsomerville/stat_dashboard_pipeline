@@ -1,6 +1,6 @@
 import yaml
 
-from stat_dashboard_pipeline.definitions import CONFIG_PATH
+from stat_dashboard_pipeline.definitions import AUTH_PATH
 
 class Auth():
     """
@@ -8,10 +8,10 @@ class Auth():
     """
 
     def __init__(self):
-        self.config_file = CONFIG_PATH
+        self.auth_file = AUTH_PATH
 
     def credentials(self):
-        with open(self.config_file, 'r') as stream:
+        with open(self.auth_file, 'r') as stream:
             try:
                 creds = yaml.safe_load(stream)
             except yaml.YAMLError as exc:

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import paramiko
 
-from stat_dashboard_pipeline.auth import Auth
+from stat_dashboard_pipeline.config import Auth
 from stat_dashboard_pipeline.definitions import ROOT_DIR
 
 

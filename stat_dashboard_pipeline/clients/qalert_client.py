@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import requests
 
-from stat_dashboard_pipeline.auth import Auth
+from stat_dashboard_pipeline.config import Auth
 
 
 class QAlertClient():
