@@ -34,7 +34,6 @@ class QScendPipeline():
         self.groom_changes()
         self.infer_activity_codes()
         self.groom_activites()
-        self.munge_activities_into_requests()
         pprint.pprint(self.requests)
 
     def get_changes(self):
@@ -43,14 +42,9 @@ class QScendPipeline():
         """
         self.raw = json.loads(self.qclient.get_changes())
         # For the sake of tidyness, let's delete the unneeded keys
-        # TODO: Date handling
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
         del self.raw['submitter'] # Contains PII
-        try:
-            del self.raw['comments'] # Can contain PII
-        except KeyError:
-            pass
 
     def groom_changes(self):
         """
@@ -62,8 +56,9 @@ class QScendPipeline():
 
         for request in raw_requests:
             # Ditch PII, convert to dict keyed on ID
+            # TODO: Date handling
             self.requests[request['id']] = {
-                'last_modified': request['displayLastAction'], # TODO: Date handling
+                'last_modified': request['displayLastAction'],
                 'dept': request['dept'],
                 'typeName': request['typeName'],
                 'latitude': request['latitude'],
@@ -91,41 +86,23 @@ class QScendPipeline():
         raw_activities = self.raw['activity']
         for activity in raw_activities:
             # Delete unused
+            # TODO: Move to config
             del activity['attachments']
             del activity['notify']
             del activity['user']
             del activity['files']
             del activity['isEditable']
             act_id = activity['requestId']
+            try:
+                self.requests[act_id]
+            except KeyError:
+                continue
             # Get or set extant value
-            activity_list = self.activity.setdefault(act_id, [])
+            activity_list = self.requests[act_id].setdefault('activity', [])
             activity_list.append(activity)
             # Sort by ID (appears to increment)
             sorted_list = sorted(activity_list, key=lambda i: (i['id']))
             self.activity[act_id] = sorted_list
-
-    def munge_activities_into_requests(self):
-        """
-        Add the activities into the requests dict
-        TODO: Can be collapsed into above func and self.activity can be deleted
-        """
-        return
-
-    @staticmethod
-    def get_statuses(status_no):
-        """
-        From QScendAPI docs:
-        valid values are 0 (open), 1 (closed), 3 (in progress), and 4 (on hold).
-        """
-        # TODO: move to config
-        valid_statuses = {
-            0: 'Open',
-            1: 'Closed',
-            3: 'In Progress',
-            4: 'On Hold'
-        }
-        return valid_statuses[status_no]
-
 
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())
@@ -182,6 +159,28 @@ class QScendPipeline():
             return q_type
         parent_id = q_type['parent']
         return self._get_ancestor(self.types[parent_id])
+
+    @staticmethod
+    def get_statuses(status_no):
+        """
+        From QScendAPI docs:
+        valid values are 0 (open), 1 (closed), 3 (in progress), and 4 (on hold).
+        """
+        # TODO: move to config
+        valid_statuses = {
+            0: 'Open',
+            1: 'Closed',
+            3: 'In Progress',
+            4: 'On Hold'
+        }
+        return valid_statuses[status_no]
+
+    @staticmethod
+    def get_categories(type_no):
+        """
+        These are inhereted from the prior repo, and can be updated in 'config/qscend_cat_id_key.json'
+        """
+        return
 
 
 if __name__ == '__main__':
