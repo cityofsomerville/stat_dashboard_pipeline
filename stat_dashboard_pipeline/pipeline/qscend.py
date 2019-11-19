@@ -7,6 +7,7 @@ import json
 import pprint
 
 from stat_dashboard_pipeline.clients.qalert_client import QAlertClient
+from stat_dashboard_pipeline.config import Config
 
 class QScendPipeline():
 
@@ -18,6 +19,7 @@ class QScendPipeline():
         self.types = {}
         self.activity_codes = {}
         self.activity = {}
+        self.categories = self.get_categories()
         # Final
         self.requests = {}
 
@@ -56,19 +58,23 @@ class QScendPipeline():
 
         for request in raw_requests:
             # Ditch PII, convert to dict keyed on ID
+            try:
+                category = self.categories[str(request['typeId'])]
+            except KeyError:
+                category = None
+
             # TODO: Date handling
             self.requests[request['id']] = {
                 'last_modified': request['displayLastAction'],
                 'dept': request['dept'],
-                'typeName': request['typeName'],
+                # 'typeName': request['typeName'],
                 'latitude': request['latitude'],
                 'longitude': request['longitude'],
                 'status': self.get_statuses(request['status']),
                 'type': self.types[request['typeId']],
-                'origin': request['origin']
+                'origin': request['origin'],
+                'category': category
             }
-            # TODO: remove
-            break
 
     def groom_activites(self):
         """
@@ -100,9 +106,9 @@ class QScendPipeline():
             # Get or set extant value
             activity_list = self.requests[act_id].setdefault('activity', [])
             activity_list.append(activity)
-            # Sort by ID (appears to increment)
+            # Sort by ID (IDs appear to increment in QScend)
             sorted_list = sorted(activity_list, key=lambda i: (i['id']))
-            self.activity[act_id] = sorted_list
+            self.requests[act_id]['activity'] = sorted_list
 
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())
@@ -176,11 +182,12 @@ class QScendPipeline():
         return valid_statuses[status_no]
 
     @staticmethod
-    def get_categories(type_no):
+    def get_categories():
         """
         These are inhereted from the prior repo, and can be updated in 'config/qscend_cat_id_key.json'
         """
-        return
+        config = Config()
+        return config.qscend_categories()
 
 
 if __name__ == '__main__':
