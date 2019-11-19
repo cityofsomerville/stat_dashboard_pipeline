@@ -5,11 +5,11 @@ from datetime import timedelta
 
 import paramiko
 
-from stat_dashboard_pipeline.auth import Auth
+from stat_dashboard_pipeline.config import Auth
 from stat_dashboard_pipeline.definitions import ROOT_DIR
 
 
-class SFTPClient():
+class CitizenServeClient():
 
     def __init__(self):
         self._credentials = self.__load_credentials()
@@ -47,7 +47,7 @@ class SFTPClient():
             self.filename
         )
 
-    def __local_path(self):
+    def local_path(self):
         return os.path.join(
             ROOT_DIR,
             'tmp',
@@ -65,7 +65,7 @@ class SFTPClient():
     def download(self, retry=5):
         self.filename = self.__generate_filename()
         remote_path = self.__remote_path()
-        local_path = self.__local_path()
+        local_path = self.local_path()
 
         self.connection = self.__create_connection()
 
@@ -79,8 +79,3 @@ class SFTPClient():
             time.sleep(5)
             retry = retry - 1
             self.download(retry=retry)
-
-if __name__ == '__main__':
-    # TODO: remove
-    sftpclient = SFTPClient()
-    sftpclient.download()

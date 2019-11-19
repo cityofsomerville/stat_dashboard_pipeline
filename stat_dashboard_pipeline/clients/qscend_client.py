@@ -4,10 +4,10 @@ from datetime import timedelta
 
 import requests
 
-from stat_dashboard_pipeline.auth import Auth
+from stat_dashboard_pipeline.config import Auth
 
 
-class QAlertClient():
+class QScendClient():
 
     def __init__(self):
         self.credentials = self.__load_credentials()
@@ -49,7 +49,7 @@ class QAlertClient():
             (datetime.datetime.now() - timedelta(days=time_window)).strftime("%m/%d/%Y")
         )
 
-    def get_by_date(self, ticket_id=None, time_window=7):
+    def get_by_date_range(self, ticket_id=None, time_window=7):
         """
         Get all tickets from last n dates (default 7)
         -or-
@@ -81,7 +81,8 @@ class QAlertClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'changes')
         querystring = {
-            "since": self._format_date(time_window)
+            "since": self._format_date(time_window),
+            "includeCustomFields": False
         }
 
         return self._generate_response(
@@ -118,9 +119,13 @@ class QAlertClient():
             querystring
         )
 
-
-if __name__ == '__main__':
-    # TODO: remove
-    qac = QAlertClient()
-    get = qac.dump_date_data()
-    print(get)
+    def get_departments(self):
+        """
+        Get Department Titles/IDs
+        """
+        url = os.path.join(self.credentials['qscend_url'], 'departments', 'get')
+        querystring = {}
+        return self._generate_response(
+            url,
+            querystring
+        )
