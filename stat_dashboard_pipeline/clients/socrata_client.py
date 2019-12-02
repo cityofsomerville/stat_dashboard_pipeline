@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from sodapy import Socrata
 
-from stat_dashboard_pipeline.auth import Auth
+from stat_dashboard_pipeline.config import Auth
 
 # TODO: Move to config
 T11_DATASET_ID = 'xs7t-pxkc'
