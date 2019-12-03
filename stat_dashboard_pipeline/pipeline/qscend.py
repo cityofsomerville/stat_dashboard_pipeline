@@ -85,7 +85,7 @@ class QScendPipeline():
         }
         """
         # TODO: (Maybe) routeId / Comment parsing
-        # TODO: Date handling
+        # TODO: Date handling (DATETIME)
         raw_activities = self.raw['activity']
         for activity in raw_activities:
             # Delete unused

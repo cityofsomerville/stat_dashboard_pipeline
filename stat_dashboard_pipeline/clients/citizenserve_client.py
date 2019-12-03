@@ -66,9 +66,13 @@ class CitizenServeClient():
         self.filename = self.__generate_filename()
         remote_path = self.__remote_path()
         local_path = self.local_path()
+        # Check for already downloaded day file
+        if os.path.exists(local_path):
+            print('[CITIZENSERVE_CLIENT] File Exists')
+            return
 
         self.connection = self.__create_connection()
-
+        print('[CITIZENSERVE_CLIENT] Starting Download')
         if self.__file_exists(remote_path) or retry == 0:
             self.connection.get(
                 remote_path,
@@ -77,5 +81,6 @@ class CitizenServeClient():
             )
         elif retry > 0:
             time.sleep(5)
+            print('[CITIZENSERVE_CLIENT] Retry Download')
             retry = retry - 1
             self.download(retry=retry)

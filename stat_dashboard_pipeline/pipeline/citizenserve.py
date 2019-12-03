@@ -4,6 +4,7 @@ Grooming for Citizenserve SFTP return
 Raw CSV SFTP Dumps -> Socrata Storable JSON
 """
 import csv
+import datetime
 
 import paramiko
 
@@ -35,10 +36,11 @@ class CitizenServePipeline():
                 permit_id = row['Permit#']
                 self.permits[permit_id] = {
                     'type': row['PermitType'],
-                    'issue_date': row['IssueDate'],
-                    'application_date': row['ApplicationDate'],
+                    'issue_date': self.__format_dates(row['IssueDate']),
+                    'application_date': self.__format_dates(row['ApplicationDate']),
                     'status': row['Status'],
                     'amount': row['PermitAmount'],
+                    # TODO: Anonymize?
                     'latitude': row['Latitude'],
                     'longitude': row['Longitude']
                 }
@@ -52,3 +54,7 @@ class CitizenServePipeline():
             print('Auth Error, Citizenserve')
             return None
         return self.cs_client.local_path()
+
+    @staticmethod
+    def __format_dates(date):
+        return datetime.datetime.strptime(date, '%m/%d/%Y')
