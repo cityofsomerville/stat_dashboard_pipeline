@@ -23,7 +23,11 @@ class Pipeline():
         """
         # TODO: convert to returns, store client next
         self.qscend.run()
+        # self.qscend.requests is product
         self.citizenserve.run()
+        # TODO: clean up types
+        # self.citizenserve.permits
+        # self.citizenserve.types
 
     def collect(self):
         return

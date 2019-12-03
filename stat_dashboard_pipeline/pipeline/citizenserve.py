@@ -48,5 +48,7 @@ class CitizenServePipeline():
         try:
             self.cs_client.download()
         except paramiko.ssh_exception.AuthenticationException:
+            # TODO: Handle error
+            print('Auth Error, Citizenserve')
             return None
         return self.cs_client.local_path()
