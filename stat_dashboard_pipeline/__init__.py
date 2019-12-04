@@ -38,7 +38,7 @@ class Pipeline():
         """
         self.__prepare()
 
-        # QScend 
+        # QScend
         self.qscend.run()
         self.store_qscend()
 
@@ -46,6 +46,7 @@ class Pipeline():
         self.citizenserve.run()
         self.store_citizenserve()
         # Cleanup Storage Dir
+
         self.__cleanup()
 
     def migrate(self):
@@ -53,12 +54,10 @@ class Pipeline():
         Citizenserve always dumps all data, so no migration needed
         """
         self.__prepare()
-        # QScend 
+        # QScend
         self.qscend.run()
         # TODO: Send dates as kwargs in to expand range
         self.migrate_qscend()
-        # Cleanup Storage Dir
-        # # self.__cleanup()
 
     def store_citizenserve(self):
         # Upsert Citizenserve Permit Data
@@ -67,13 +66,22 @@ class Pipeline():
             dataset_id=CS_DATASET_ID,
             citizenserve_update_window=CITIZENSERVE_UPDATE_WINDOW
         )
+        print('[SOCRATA] Storing Citizenserve')
         socrata.run()
 
     def store_qscend(self):
+        # Activities
         socrata = SocrataClient(
             service_data=self.qscend.activities,
             dataset_id=QS_ACTIVITIES_ID
         )
+        print('[SOCRATA] Storing QSCend Activities')
+        socrata.run()
+
+        # Requests
+        socrata.service_data = self.qscend.requests
+        socrata.dataset_id = QS_DATASET_ID
+        print('[SOCRATA] Storing QSCend Requests')
         socrata.run()
 
     def migrate_qscend(self):

@@ -84,7 +84,7 @@ class QScendClient():
             "since": self._format_date(time_window),
             "includeCustomFields": False
         }
-
+        print('[QSCEND_CLIENT] Retrieving Changes')
         return self._generate_response(
             url,
             querystring

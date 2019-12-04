@@ -15,6 +15,7 @@ import os
 import datetime
 from datetime import timedelta
 import csv
+import pprint
 
 from sodapy import Socrata
 
@@ -47,6 +48,8 @@ class SocrataClient():
             self._credentials['socrata_username'],
             self._credentials['socrata_password']
         )
+        # See 
+        # https://stackoverflow.com/questions/47514331/readtimeout-error-for-api-data-with-sodapy-client
         self.client.timeout = 100
 
     def upsert(self):
@@ -70,7 +73,7 @@ class SocrataClient():
                 groomed_data=groomed_data
             )
         print('[SOCRATA_CLIENT] Upserting data')
-        self.client.upsert(self.dataset_id, data)
+        pprint.pprint(self.client.upsert(self.dataset_id, data))
 
     def upsert_citizenserve(self, groomed_data):
         data = []
@@ -86,7 +89,7 @@ class SocrataClient():
                 data.append(row)
         return data
 
-    def upsert_qscend(self, groomed_data):    
+    def upsert_qscend(self, groomed_data):
         data = []
         for row in groomed_data[0]:
             for key, entry in row.items():
