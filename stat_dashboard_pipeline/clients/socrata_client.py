@@ -29,10 +29,10 @@ class SocrataClient():
         self.client = None
         self.service_data = kwargs.get('service_data', None)
         self.dataset_id = kwargs.get('dataset_id', None)
-        self.citizenserve_update_window = kwargs.get('citizenserve_update_window', 90)
+        self.citizenserve_update_window = kwargs.get('citizenserve_update_window', None)
 
     def run(self):
-        self.upsert_citizenserve()
+        self.upsert()
 
     @staticmethod
     def __load_credentials():
@@ -47,8 +47,9 @@ class SocrataClient():
             self._credentials['socrata_username'],
             self._credentials['socrata_password']
         )
+        self.client.timeout = 100
 
-    def upsert_citizenserve(self):
+    def upsert(self):
         """
         NOTE: Unique ID in Socrata is set via UI
         https://support.socrata.com/hc/en-us/articles/ \
@@ -60,20 +61,41 @@ class SocrataClient():
         if self.client is None:
             self._connect()
         groomed_data = self.dict_transform()
+        if self.citizenserve_update_window is not None:
+            data  = self.upsert_citizenserve(
+                groomed_data=groomed_data
+            )
+        else:
+            data = self.upsert_qscend(
+                groomed_data=groomed_data
+            )
+        print('[SOCRATA_CLIENT] Upserting data')
+        self.client.upsert(self.dataset_id, data)
+
+    def upsert_citizenserve(self, groomed_data):
         data = []
         for row in groomed_data[0]:
-            # TODO: Make generic, DRY up
             if row['application_date'] > \
-                datetime.datetime.now() - timedelta(days=self.citizenserve_update_window):
+            datetime.datetime.now() - timedelta(days=self.citizenserve_update_window) and \
+            self.citizenserve_update_window is not None:
                 for key, entry in row.items():
                     # Deformat dates
                     if isinstance(entry, datetime.datetime):
                         replacement = self.__deformat_date(entry)
                         row[key] = replacement
                 data.append(row)
+        return data
 
-        print('[SOCRATA_CLIENT] Upserting data')
-        self.client.upsert(self.dataset_id, data)
+    def upsert_qscend(self, groomed_data):    
+        data = []
+        for row in groomed_data[0]:
+            for key, entry in row.items():
+                # Deformat dates
+                if isinstance(entry, datetime.datetime):
+                    replacement = self.__deformat_date(entry)
+                    row[key] = replacement
+                data.append(row)
+        return data
 
     def replace_data_json(self):
         """
@@ -89,7 +111,7 @@ class SocrataClient():
         data = open(tempfile)
         # NOTE: This isn't working, (HTTPS timeout)
         # but can be/was uploaded using UI
-        self.client.replace(T11_DATASET_ID, data)
+        self.client.replace(self.dataset_id, data)
 
     def dict_transform(self):
         fieldnames = set()
@@ -104,7 +126,7 @@ class SocrataClient():
             final_report.append(row)
         return (final_report, fieldnames)
 
-    def __json_to_csv(self):
+    def json_to_csv(self, filename='soctemp.csv'):
         """
         Convert JSON to temporary CSV file
         for initial upload
@@ -113,7 +135,7 @@ class SocrataClient():
         tempfile = os.path.join(
             ROOT_DIR,
             'tmp',
-            'soctemp.csv'
+            filename
         )
         fieldnames = set()
         final_report = []

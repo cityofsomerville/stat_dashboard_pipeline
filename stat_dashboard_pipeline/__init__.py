@@ -13,7 +13,8 @@ from stat_dashboard_pipeline.definitions import ROOT_DIR
 
 NAME = "stat_dashboard_pipeline"
 # TODO: Move to config
-T11_DATASET_ID = '8bfi-2uyk'
+QS_DATASET_ID = 'rhvv-tfhr'
+QS_ACTIVITIES_ID = 'qca6-ha4e'
 CS_DATASET_ID = 'ec6w-s4am'
 CITIZENSERVE_UPDATE_WINDOW = 90
 
@@ -25,42 +26,81 @@ class Pipeline():
     def __init__(self):
         self.citizenserve = CitizenServePipeline()
         self.qscend = QScendPipeline()
-        self.socrata = None
 
     def run(self):
         """
         Nominal running of pipeline code
         Products:
             self.qscend.requests()
+            self.qscend.activities()
             self.citizenserve.permits
-            self.citizenserve.types
+            self.citizenserve.types <-- Unused
         """
-        # Create temp storage, if not there
         self.__prepare()
-        # TODO: convert to returns, store client next
-        # self.qscend.run()
+
+        # QScend 
+        self.qscend.run()
+        self.store_qscend()
+
+        # Citizenserve
         self.citizenserve.run()
-        # TODO: clean up CS types
         self.store_citizenserve()
         # Cleanup Storage Dir
-        # self.__cleanup()
+        self.__cleanup()
+
+    def migrate(self):
+        """
+        Citizenserve always dumps all data, so no migration needed
+        """
+        self.__prepare()
+        # QScend 
+        self.qscend.run()
+        # TODO: Send dates as kwargs in to expand range
+        self.migrate_qscend()
+        # Cleanup Storage Dir
+        # # self.__cleanup()
 
     def store_citizenserve(self):
         # Upsert Citizenserve Permit Data
-        self.socrata = SocrataClient(
+        socrata = SocrataClient(
             service_data=self.citizenserve.permits,
             dataset_id=CS_DATASET_ID,
             citizenserve_update_window=CITIZENSERVE_UPDATE_WINDOW
         )
-        self.socrata.run()
-        return
+        socrata.run()
+
+    def store_qscend(self):
+        socrata = SocrataClient(
+            service_data=self.qscend.activities,
+            dataset_id=QS_ACTIVITIES_ID
+        )
+        socrata.run()
+
+    def migrate_qscend(self):
+        """
+        This is an initial 'create CSV' method for migrating
+        large datasets and instantiating them in the Socrata UI
+        """
+        # Activites
+        socrata = SocrataClient(
+            service_data=self.qscend.activities,
+            dataset_id=QS_ACTIVITIES_ID
+        )
+        socrata.json_to_csv(filename='qscend_activities.csv')
+        # Requests
+        socrata.service_data = self.qscend.requests
+        socrata.json_to_csv(filename='qscend_requests.csv')
 
     @staticmethod
     def __prepare():
-        if not os.path.exists(os.path.join(ROOT_DIR, 'tmp')):
-            os.mkdir(os.path.join(ROOT_DIR, 'tmp'))
-    
+        temp_dir = os.path.join(ROOT_DIR, 'tmp')
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+
     @staticmethod
     def __cleanup():
-        if os.path.exists(os.path.join(ROOT_DIR, 'tmp')):
-            shutil.rmtree(os.path.join(ROOT_DIR, 'tmp'))
+        temp_dir = os.path.join(ROOT_DIR, 'tmp')
+        if os.path.exists(temp_dir):
+            for file in os.listdir(temp_dir):
+                if file != 'README.md':
+                    os.remove(os.path.join(temp_dir, file))

@@ -30,6 +30,7 @@ class CitizenServePipeline():
         The SFTP dump appears to be 'everything since 2015'
         So we'll overwrite and create a fresh JSON for upload
         """
+        # TODO: Adapt Data Types from config/email
         with open(temp_file, 'r', encoding="ISO-8859-1") as data:
             datareader = csv.DictReader(data, delimiter='\t')
             for row in datareader:
