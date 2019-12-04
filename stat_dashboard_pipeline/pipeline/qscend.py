@@ -17,10 +17,7 @@ class QScendPipeline():
         # Intermediate Data
         self.departments = {}
         self.types = {}
-        self.activity_codes = {}
         self.categories = self.get_categories()
-        self.origins = set()
-        self.routes = set()
         # Final
         self.requests = {}
         self.activities = {}
@@ -39,7 +36,6 @@ class QScendPipeline():
         print('[QSCEND] Grooming Requests')
         self.groom_changes()
         print('[QSCEND] Grooming Activities')
-        self.infer_activity_codes()
         self.groom_activites()
 
     def get_changes(self):
@@ -65,7 +61,8 @@ class QScendPipeline():
             except KeyError:
                 category = None
 
-            if self.types[request['typeId']]['isPrivate'] or self.types[request['typeId']]['ancestor']['isPrivate']:
+            if self.types[request['typeId']]['isPrivate'] or \
+            self.types[request['typeId']]['ancestor']['isPrivate']:
                 continue
 
             last_modified = self.get_date(request['displayLastAction'])
@@ -84,7 +81,6 @@ class QScendPipeline():
                 'origin': request['origin'],
                 'category': category
             }
-            self.origins.add(request['origin'])
 
     @staticmethod
     def get_date(date):
@@ -92,7 +88,7 @@ class QScendPipeline():
 
     def groom_activites(self):
         """
-        Create a subtable of activites with a 
+        Create a subtable of activites with a
         FK equivalent keyed on request ID
         """
         raw_activities = self.raw['activity']
@@ -121,7 +117,6 @@ class QScendPipeline():
                 # Names are typically u/n like "gmartin"
                 # and departments are usually formatted like "DPWAdmin"
                 if route.strip() and route.strip()[0].isupper():
-                    self.routes.add(route.strip())
                     activity['route'] = route.strip()
                 else:
                     activity['route'] = None
@@ -135,7 +130,7 @@ class QScendPipeline():
                 'route': activity['route']
             }
 
-            '''
+            """
             # Due to Socrata's CSV style storage, we're going to store in a separate
             # table -- however below is the abandoned code to store in a sorted list
             # appended to the request ID. If we revert to JSON storage, we can resurrect
@@ -154,7 +149,7 @@ class QScendPipeline():
             # append to requests in list
             sorted_list = sorted(activity_list, key=lambda i: (i['id']))
             self.requests[act_id]['activity'] = sorted_list
-            '''
+            """
 
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())
@@ -177,18 +172,6 @@ class QScendPipeline():
                 department = self.departments[q_type['dept']]
                 q_type['dept'] = department
             self.types[type_id] = q_type
-
-    def infer_activity_codes(self):
-        """
-        Infer Activity Names from 'activity' return from API
-        """
-        raw_activities = self.raw['activity']
-        for activity in raw_activities:
-            if self.activity_codes.get('code') is not None and \
-            self.activity_codes['code'] != activity['codeDesc']:
-                # TODO: Err handling
-                continue
-            self.activity_codes[activity['code']] = activity['codeDesc']
 
     def get_type_ancestry(self):
         """

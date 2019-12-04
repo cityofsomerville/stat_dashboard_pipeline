@@ -48,7 +48,7 @@ class SocrataClient():
             self._credentials['socrata_username'],
             self._credentials['socrata_password']
         )
-        # See 
+        # See:
         # https://stackoverflow.com/questions/47514331/readtimeout-error-for-api-data-with-sodapy-client
         self.client.timeout = 100
 
@@ -65,7 +65,7 @@ class SocrataClient():
             self._connect()
         groomed_data = self.dict_transform()
         if self.citizenserve_update_window is not None:
-            data  = self.upsert_citizenserve(
+            data = self.upsert_citizenserve(
                 groomed_data=groomed_data
             )
         else:
@@ -123,9 +123,9 @@ class SocrataClient():
             fieldnames.add('id')
             # Add ID, go into dict
             row = {'id': key}
-            for k, e in entry.items():
-                row[k] = e
-                fieldnames.add(k)
+            for subkey, subent in entry.items():
+                row[subkey] = subent
+                fieldnames.add(subkey)
             final_report.append(row)
         return (final_report, fieldnames)
 
@@ -146,9 +146,9 @@ class SocrataClient():
             fieldnames.add('id')
             # Add ID, go into dict
             row = {'id': key}
-            for k, e in entry.items():
-                row[k] = e
-                fieldnames.add(k)
+            for subkey, subent in entry.items():
+                row[subkey] = subent
+                fieldnames.add(subkey)
             final_report.append(row)
 
         with open(tempfile, 'w', newline='') as csvfile:
@@ -156,7 +156,6 @@ class SocrataClient():
             writer.writeheader()
             for row in final_report:
                 writer.writerow(row)
-        return
 
     @staticmethod
     def __deformat_date(date):
