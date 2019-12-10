@@ -23,6 +23,15 @@ pip install .
 stat_pipeline
 ```
 
+## Migrate
+To initialize the data for the datasets: Large historical queries and long run time. 
+#### WARNING - Does not store in Socrata - only makes temporary CSV files for upload to the Somerville Socrata instance via the UI
+```
+stat_pipeline -m 
+# OR
+stat_pipeline --migrate
+```
+
 ## Test
 ```
 python setup.py test

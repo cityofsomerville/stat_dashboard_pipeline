@@ -18,9 +18,7 @@ def qscend_category_keys():
     for key, entry in data.items():
         entry.sort()
         for item in entry:
-            # Check for dupes - will overwrite with last if duped
-            if item in final_dict.keys():
-                print(item, key)
+            # Will overwrite with last if duped
             final_dict[item] = key
 
     with open(os.path.join(ROOT, 'qscend_cat_id_key.json'), 'w') as outfile:

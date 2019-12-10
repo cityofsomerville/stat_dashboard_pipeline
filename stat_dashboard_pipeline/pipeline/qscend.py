@@ -4,6 +4,7 @@ Grooming process for QScend Client
 Raw JSON API Dumps -> Socrata Storable JSON
 """
 import json
+import datetime
 
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
 from stat_dashboard_pipeline.config import Config
@@ -16,23 +17,25 @@ class QScendPipeline():
         # Intermediate Data
         self.departments = {}
         self.types = {}
-        self.activity_codes = {}
         self.categories = self.get_categories()
         # Final
         self.requests = {}
+        self.activities = {}
 
     def run(self):
         """
         Semi-temp master run funct
         """
+        print('[QSCEND] Grooming Departments and Types')
         self.groom_depts()
         self.groom_types()
         self.get_type_ancestry()
 
         # Get Changes
         self.get_changes()
+        print('[QSCEND] Grooming Requests')
         self.groom_changes()
-        self.infer_activity_codes()
+        print('[QSCEND] Grooming Activities')
         self.groom_activites()
 
     def get_changes(self):
@@ -50,9 +53,7 @@ class QScendPipeline():
         Get the data from the QScendAPI Client, munge into a usable dict
         Create usable FE dict
         """
-        # TODO: Check origins (ios, call center, QAlert Mobile iOS, Control Panel, etc.)
         raw_requests = self.raw['request']
-
         for request in raw_requests:
             # Ditch PII, convert to dict keyed on ID
             try:
@@ -60,32 +61,36 @@ class QScendPipeline():
             except KeyError:
                 category = None
 
-            # TODO: Date handling
+            if self.types[request['typeId']]['isPrivate'] or \
+            self.types[request['typeId']]['ancestor']['isPrivate']:
+                continue
+
+            last_modified = self.get_date(request['displayLastAction'])
+
+            type_name = self.types[request['typeId']]['name']
+            parent_name = self.types[request['typeId']]['ancestor']['name']
+
             self.requests[request['id']] = {
-                'last_modified': request['displayLastAction'],
+                'last_modified': last_modified,
                 'dept': request['dept'],
-                # 'typeName': request['typeName'],
                 'latitude': request['latitude'],
                 'longitude': request['longitude'],
                 'status': self.get_statuses(request['status']),
-                'type': self.types[request['typeId']],
+                'type': type_name,
+                'parent': parent_name,
                 'origin': request['origin'],
                 'category': category
             }
 
+    @staticmethod
+    def get_date(date):
+        return datetime.datetime.strptime(date, '%m/%d/%Y %I:%M %p')
+
     def groom_activites(self):
         """
-        Create a dict of arrays of dicts, keyed on request ID
-
-        self.requests = {
-            request id: [
-                {activity},
-                {activity}
-            ]
-        }
+        Create a subtable of activites with a
+        FK equivalent keyed on request ID
         """
-        # TODO: (Maybe) routeId / Comment parsing
-        # TODO: Date handling
         raw_activities = self.raw['activity']
         for activity in raw_activities:
             # Delete unused
@@ -95,7 +100,44 @@ class QScendPipeline():
             del activity['user']
             del activity['files']
             del activity['isEditable']
+            del activity['actDate']
+            del activity['actDateUnix']
+
+            # Convert to datetime
+            action_date = self.get_date(activity['displayDate'])
+            activity['action_date'] = action_date
+            del activity['displayDate']
+
+            # TODO: Comment parsing
+            del activity['comments']
+
+            # Parse Routes
+            for route in activity['routeId'].split(','):
+                # This is a little dicey, but seems to work in AD2019
+                # Names are typically u/n like "gmartin"
+                # and departments are usually formatted like "DPWAdmin"
+                if route.strip() and route.strip()[0].isupper():
+                    activity['route'] = route.strip()
+                else:
+                    activity['route'] = None
+            del activity['routeId']
+
+            self.activities[activity['id']] = {
+                'request_id': activity['requestId'],
+                'action_date': activity['action_date'],
+                'code': activity['code'],
+                'codeDesc': activity['codeDesc'],
+                'route': activity['route']
+            }
+
+            """
+            # Due to Socrata's CSV style storage, we're going to store in a separate
+            # table -- however below is the abandoned code to store in a sorted list
+            # appended to the request ID. If we revert to JSON storage, we can resurrect
+            # this code
+
             act_id = activity['requestId']
+            # Potential key err handling
             try:
                 self.requests[act_id]
             except KeyError:
@@ -104,8 +146,10 @@ class QScendPipeline():
             activity_list = self.requests[act_id].setdefault('activity', [])
             activity_list.append(activity)
             # Sort by ID (IDs appear to increment in QScend)
+            # append to requests in list
             sorted_list = sorted(activity_list, key=lambda i: (i['id']))
             self.requests[act_id]['activity'] = sorted_list
+            """
 
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())
@@ -120,7 +164,6 @@ class QScendPipeline():
         for q_type in raw_types:
             type_id = q_type['id']
             # Unneeded values
-            # TODO: 'isPrivate'?
             del q_type['id']
             del q_type['priorityValue']
 
@@ -129,18 +172,6 @@ class QScendPipeline():
                 department = self.departments[q_type['dept']]
                 q_type['dept'] = department
             self.types[type_id] = q_type
-
-    def infer_activity_codes(self):
-        """
-        Infer Activity Names from 'activity' return from API
-        """
-        raw_activities = self.raw['activity']
-        for activity in raw_activities:
-            if self.activity_codes.get('code') is not None and \
-            self.activity_codes['code'] != activity['codeDesc']:
-                # TODO: Err handling
-                continue
-            self.activity_codes[activity['code']] = activity['codeDesc']
 
     def get_type_ancestry(self):
         """

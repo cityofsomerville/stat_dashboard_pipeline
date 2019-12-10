@@ -13,5 +13,5 @@ venv/
 
 # Repo
 tmp/*.txt
-config.yaml
+tmp/*.csv
 config/auth.yaml

@@ -11,3 +11,9 @@ sftp_remote_dir: ''
 # QAlert / QScend API
 qscend_key: ''
 qscend_url: ''
+
+# Socrata Client
+socrata_username: ''
+socrata_password: ''
+socrata_token: ''
+socrata_url: ''
