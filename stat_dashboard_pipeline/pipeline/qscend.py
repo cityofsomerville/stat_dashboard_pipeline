@@ -9,12 +9,13 @@ import datetime
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
 from stat_dashboard_pipeline.config import Config
 
+
 class QScendPipeline():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.qclient = QScendClient()
         self.raw = None
-        # Intermediate Data
+        self.time_window = kwargs.get('time_window', 1)
         self.departments = {}
         self.categories = self.get_categories()
         # Final
@@ -45,8 +46,10 @@ class QScendPipeline():
         """
         Call and clean response from QScendClient class
         """
-        self.raw = json.loads(self.qclient.get_changes())
-        # For the sake of tidyness, let's delete the unneeded keys
+        self.raw = json.loads(
+            self.qclient.get_changes(time_window=self.time_window)
+        )
+        # Delete the unneeded keys
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
         del self.raw['submitter'] # Contains PII
@@ -64,7 +67,8 @@ class QScendPipeline():
             except KeyError:
                 category = None
 
-            # Ditch 'isPrivate' requests (internal use only)
+            # Only take up "isPrivate: False" requests 
+            # ('isPrivate' is internal use only)
             try:
                 self.types[request['typeId']]
             except KeyError:
@@ -77,7 +81,6 @@ class QScendPipeline():
 
             last_modified = self.get_date(request['displayLastAction'])
 
-            # type_name = self.types[request['typeId']]['name']
             ancestor_id = None
             if self.types[request['typeId']]['ancestor']:
                 ancestor_id = self.types[request['typeId']]['ancestor']['id']
@@ -141,27 +144,6 @@ class QScendPipeline():
                 'codeDesc': activity['codeDesc'],
                 'route': activity['route']
             }
-
-            """
-            # Due to Socrata's CSV style storage, we're going to store in a separate
-            # table -- however below is the abandoned code to store in a sorted list
-            # appended to the request ID. If we revert to JSON storage, we can resurrect
-            # this code
-
-            act_id = activity['requestId']
-            # Potential key err handling
-            try:
-                self.requests[act_id]
-            except KeyError:
-                continue
-            # Get or set extant value
-            activity_list = self.requests[act_id].setdefault('activity', [])
-            activity_list.append(activity)
-            # Sort by ID (IDs appear to increment in QScend)
-            # append to requests in list
-            sorted_list = sorted(activity_list, key=lambda i: (i['id']))
-            self.requests[act_id]['activity'] = sorted_list
-            """
 
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())

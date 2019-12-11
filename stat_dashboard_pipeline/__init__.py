@@ -18,7 +18,8 @@ QS_REQUESTS_ID = '4pyi-uqq6'
 QS_ACTIVITIES_ID = 'f7b7-bfkg'
 QS_TYPES_ID = 'ikh2-c6hz'
 CS_DATASET_ID = 'vxgw-vmky'
-CITIZENSERVE_UPDATE_WINDOW = 90
+CITIZENSERVE_UPDATE_WINDOW = 30
+MIGRATION_UPDATE_WINDOW = 30
 
 class Pipeline():
     """
@@ -33,24 +34,23 @@ class Pipeline():
         """
         Nominal running of pipeline code
         Products:
-            self.qscend.requests()
-            self.qscend.activities()
+            self.qscend.requests
+            self.qscend.activities
+            self.qscend.types
             self.citizenserve.permits
-            self.citizenserve.types <-- Unused
         """
         self.__prepare()
 
         # QScend
-        # self.qscend.run()
-        # self.store_qscend()
+        self.qscend.run()
+        self.store_qscend()
 
         # Citizenserve
         self.citizenserve.run()
-        pprint.pprint(self.citizenserve.permits)
-        # self.store_citizenserve()
+        self.store_citizenserve()
 
         # Cleanup Storage Dir
-        # self.__cleanup()
+        self.__cleanup()
 
     def migrate(self):
         """
@@ -58,7 +58,8 @@ class Pipeline():
         """
         self.__prepare()
         # QScend
-        # self.qscend.run()
+        self.qscend.time_window = MIGRATION_UPDATE_WINDOW
+        self.qscend.run()
         self.citizenserve.run()
         self.migrate_qscend()
 
@@ -66,7 +67,7 @@ class Pipeline():
         # Upsert Citizenserve Permit Data
         socrata = SocrataClient(
             service_data=self.citizenserve.permits,
-            dataset_id=QS_REQUESTS_ID,
+            dataset_id=CS_DATASET_ID,
             citizenserve_update_window=CITIZENSERVE_UPDATE_WINDOW
         )
         print('[SOCRATA] Storing Citizenserve')
@@ -103,13 +104,13 @@ class Pipeline():
             service_data=self.qscend.activities,
             dataset_id=QS_ACTIVITIES_ID
         )
-        # socrata.json_to_csv(filename='qscend_activities.csv')
-        # # Requests
-        # socrata.service_data = self.qscend.requests
-        # socrata.json_to_csv(filename='qscend_requests.csv')
-        # # Types
-        # socrata.service_data = self.qscend.types
-        # socrata.json_to_csv(filename='qscend_types.csv')
+        socrata.json_to_csv(filename='qscend_activities.csv')
+        # Requests
+        socrata.service_data = self.qscend.requests
+        socrata.json_to_csv(filename='qscend_requests.csv')
+        # Types
+        socrata.service_data = self.qscend.types
+        socrata.json_to_csv(filename='qscend_types.csv')
         # Permits
         socrata.service_data = self.citizenserve.permits
         socrata.json_to_csv(filename='citizenserve_permits.csv')
