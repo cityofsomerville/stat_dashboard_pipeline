@@ -77,10 +77,10 @@ class QScendPipeline():
 
             last_modified = self.get_date(request['displayLastAction'])
 
-            type_name = self.types[request['typeId']]['name']
-            parent_name = None
+            # type_name = self.types[request['typeId']]['name']
+            ancestor_id = None
             if self.types[request['typeId']]['ancestor']:
-                parent_name = self.types[request['typeId']]['ancestor']['name']
+                ancestor_id = self.types[request['typeId']]['ancestor']['id']
 
             self.requests[request['id']] = {
                 'last_modified': last_modified,
@@ -88,8 +88,8 @@ class QScendPipeline():
                 'latitude': request['latitude'],
                 'longitude': request['longitude'],
                 'status': self.get_statuses(request['status']),
-                'type': type_name,
-                'parent': parent_name,
+                'type': request['typeId'],
+                'ancestor': ancestor_id,
                 'origin': request['origin'],
                 'category': category
             }
