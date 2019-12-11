@@ -4,7 +4,6 @@ Pipeline
 """
 import os
 import shutil
-import pprint
 
 from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline

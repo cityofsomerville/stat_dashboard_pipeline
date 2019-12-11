@@ -17,7 +17,6 @@ class QScendPipeline():
         self.raw = None
         self.time_window = kwargs.get('time_window', 1)
         self.departments = {}
-        self.categories = self.get_categories()
         # Final
         self.requests = {}
         self.activities = {}
@@ -60,14 +59,15 @@ class QScendPipeline():
         Create usable FE dict
         """
         raw_requests = self.raw['request']
+        categories = self.get_categories()
         for request in raw_requests:
             # Convert to dict keyed on ID
             try:
-                category = self.categories[str(request['typeId'])]
+                category = categories[str(request['typeId'])]
             except KeyError:
                 category = None
 
-            # Only take up "isPrivate: False" requests 
+            # Only take up "isPrivate: False" requests
             # ('isPrivate' is internal use only)
             try:
                 self.types[request['typeId']]
@@ -199,7 +199,7 @@ class QScendPipeline():
             # Add 'ancestor' key/value
             if entry['parent'] != 0:
                 self.types[key]['ancestor'] = self._get_ancestor(
-                    q_type=self.types[key], 
+                    q_type=self.types[key],
                     key=key
                 )
             try:
@@ -216,9 +216,9 @@ class QScendPipeline():
             q_type['id'] = key
             return q_type
         parent_id = q_type['parent']
-        
+
         return self._get_ancestor(
-            q_type=self.types[parent_id], 
+            q_type=self.types[parent_id],
             key=parent_id
         )
 
