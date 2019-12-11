@@ -16,11 +16,12 @@ class QScendPipeline():
         self.raw = None
         # Intermediate Data
         self.departments = {}
-        self.types = {}
         self.categories = self.get_categories()
         # Final
         self.requests = {}
         self.activities = {}
+        self.types = {}
+
 
     def run(self):
         """
@@ -37,6 +38,8 @@ class QScendPipeline():
         self.groom_changes()
         print('[QSCEND] Grooming Activities')
         self.groom_activites()
+        print('[QSCEND] Grooming Types for Publication')
+        self.groom_published_types()
 
     def get_changes(self):
         """
@@ -55,20 +58,29 @@ class QScendPipeline():
         """
         raw_requests = self.raw['request']
         for request in raw_requests:
-            # Ditch PII, convert to dict keyed on ID
+            # Convert to dict keyed on ID
             try:
                 category = self.categories[str(request['typeId'])]
             except KeyError:
                 category = None
 
-            if self.types[request['typeId']]['isPrivate'] or \
-            self.types[request['typeId']]['ancestor']['isPrivate']:
+            # Ditch 'isPrivate' requests (internal use only)
+            try:
+                self.types[request['typeId']]
+            except KeyError:
                 continue
+            else:
+                if self.types[request['typeId']]['isPrivate'] or \
+                    self.types[request['typeId']]['ancestor'] and \
+                    self.types[request['typeId']]['ancestor']['isPrivate']:
+                    continue
 
             last_modified = self.get_date(request['displayLastAction'])
 
             type_name = self.types[request['typeId']]['name']
-            parent_name = self.types[request['typeId']]['ancestor']['name']
+            parent_name = None
+            if self.types[request['typeId']]['ancestor']:
+                parent_name = self.types[request['typeId']]['ancestor']['name']
 
             self.requests[request['id']] = {
                 'last_modified': last_modified,
@@ -156,6 +168,27 @@ class QScendPipeline():
         for dept in raw_depts:
             self.departments[dept['id']] = dept['name']
 
+    def groom_published_types(self):
+        """
+        This step is necessary because not
+        every day's requests call every type
+
+        """
+        final_types = {}
+        for key, entry in self.types.items():
+            if not self.types[key]['isPrivate']:
+                del entry['isPrivate']
+                del entry['parent']
+                if self.types[key]['ancestor']:
+                    entry['ancestor_id'] = self.types[key]['ancestor']['id']
+                    entry['ancestor_name'] = self.types[key]['ancestor']['name']
+                else:
+                    entry['ancestor_id'] = 0
+                    entry['ancestor_name'] = None
+                del entry['ancestor']
+                final_types[key] = entry
+        self.types = final_types
+
     def groom_types(self):
         """
         Call API, get raw types, munge into dict
@@ -183,16 +216,29 @@ class QScendPipeline():
         for key, entry in self.types.items():
             # Add 'ancestor' key/value
             if entry['parent'] != 0:
-                self.types[key]['ancestor'] = self._get_ancestor(self.types[key])
+                self.types[key]['ancestor'] = self._get_ancestor(
+                    q_type=self.types[key], 
+                    key=key
+                )
+            try:
+                self.types[key]['ancestor']
+            except KeyError:
+                self.types[key]['ancestor'] = None
 
-    def _get_ancestor(self, q_type):
+
+    def _get_ancestor(self, q_type, key):
         """
         Recurse to find ancestor node
         """
         if q_type['parent'] == 0:
+            q_type['id'] = key
             return q_type
         parent_id = q_type['parent']
-        return self._get_ancestor(self.types[parent_id])
+        
+        return self._get_ancestor(
+            q_type=self.types[parent_id], 
+            key=parent_id
+        )
 
     @staticmethod
     def get_statuses(status_no):
