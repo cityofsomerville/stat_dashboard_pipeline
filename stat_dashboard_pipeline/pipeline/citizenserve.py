@@ -18,7 +18,6 @@ class CitizenServePipeline():
     def __init__(self):
         self.cs_client = CitizenServeClient()
         self.permits = {}
-        self.types = set()
         self.categories = self.get_categories()
 
     def run(self):

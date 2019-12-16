@@ -20,7 +20,6 @@ import logging
 from sodapy import Socrata
 
 from stat_dashboard_pipeline.config import Config, ROOT_DIR
-# from stat_dashboard_pipeline.definitions import ROOT_DIR
 
 SOCRATA_MASTER_TIMEOUT = 600
 
