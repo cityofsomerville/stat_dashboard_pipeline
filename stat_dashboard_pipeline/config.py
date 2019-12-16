@@ -7,6 +7,7 @@ import yaml
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QSCEND_CATEGORY_FILE = 'qscend_categories.json'
 PERMIT_CATEGORY_FILE = 'permit_categories.json'
+SOCRATA_CONFIG = 'socrata.json'
 
 class Config():
     """
@@ -27,6 +28,11 @@ class Config():
             ROOT_DIR,
             'config',
             'auth.yaml'
+        ))
+        self.socrata_datasets = self.__parse_json(os.path.join(
+            ROOT_DIR,
+            'config',
+            SOCRATA_CONFIG
         ))
 
     @staticmethod
