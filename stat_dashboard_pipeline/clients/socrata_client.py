@@ -22,6 +22,7 @@ from sodapy import Socrata
 from stat_dashboard_pipeline.config import Auth
 from stat_dashboard_pipeline.definitions import ROOT_DIR
 
+SOCRATA_MASTER_TIMEOUT = 600
 
 class SocrataClient():
 
@@ -50,7 +51,7 @@ class SocrataClient():
         )
         # See:
         # https://stackoverflow.com/questions/47514331/readtimeout-error-for-api-data-with-sodapy-client
-        self.client.timeout = 100
+        self.client.timeout = SOCRATA_MASTER_TIMEOUT
 
     def upsert(self):
         """

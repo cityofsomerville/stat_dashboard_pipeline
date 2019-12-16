@@ -9,18 +9,19 @@ import datetime
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
 from stat_dashboard_pipeline.config import Config
 
+
 class QScendPipeline():
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.qclient = QScendClient()
         self.raw = None
-        # Intermediate Data
+        self.time_window = kwargs.get('time_window', 1)
         self.departments = {}
-        self.types = {}
-        self.categories = self.get_categories()
         # Final
         self.requests = {}
         self.activities = {}
+        self.types = {}
+
 
     def run(self):
         """
@@ -37,13 +38,17 @@ class QScendPipeline():
         self.groom_changes()
         print('[QSCEND] Grooming Activities')
         self.groom_activites()
+        print('[QSCEND] Grooming Types for Publication')
+        self.groom_published_types()
 
     def get_changes(self):
         """
         Call and clean response from QScendClient class
         """
-        self.raw = json.loads(self.qclient.get_changes())
-        # For the sake of tidyness, let's delete the unneeded keys
+        self.raw = json.loads(
+            self.qclient.get_changes(time_window=self.time_window)
+        )
+        # Delete the unneeded keys
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
         del self.raw['submitter'] # Contains PII
@@ -54,21 +59,31 @@ class QScendPipeline():
         Create usable FE dict
         """
         raw_requests = self.raw['request']
+        categories = self.get_categories()
         for request in raw_requests:
-            # Ditch PII, convert to dict keyed on ID
+            # Convert to dict keyed on ID
             try:
-                category = self.categories[str(request['typeId'])]
+                category = categories[str(request['typeId'])]
             except KeyError:
                 category = None
 
-            if self.types[request['typeId']]['isPrivate'] or \
-            self.types[request['typeId']]['ancestor']['isPrivate']:
+            # Only take up "isPrivate: False" requests
+            # ('isPrivate' is internal use only)
+            try:
+                self.types[request['typeId']]
+            except KeyError:
                 continue
+            else:
+                if self.types[request['typeId']]['isPrivate'] or \
+                    self.types[request['typeId']]['ancestor'] and \
+                    self.types[request['typeId']]['ancestor']['isPrivate']:
+                    continue
 
             last_modified = self.get_date(request['displayLastAction'])
 
-            type_name = self.types[request['typeId']]['name']
-            parent_name = self.types[request['typeId']]['ancestor']['name']
+            ancestor_id = None
+            if self.types[request['typeId']]['ancestor']:
+                ancestor_id = self.types[request['typeId']]['ancestor']['id']
 
             self.requests[request['id']] = {
                 'last_modified': last_modified,
@@ -76,8 +91,8 @@ class QScendPipeline():
                 'latitude': request['latitude'],
                 'longitude': request['longitude'],
                 'status': self.get_statuses(request['status']),
-                'type': type_name,
-                'parent': parent_name,
+                'type': request['typeId'],
+                'ancestor': ancestor_id,
                 'origin': request['origin'],
                 'category': category
             }
@@ -130,31 +145,31 @@ class QScendPipeline():
                 'route': activity['route']
             }
 
-            """
-            # Due to Socrata's CSV style storage, we're going to store in a separate
-            # table -- however below is the abandoned code to store in a sorted list
-            # appended to the request ID. If we revert to JSON storage, we can resurrect
-            # this code
-
-            act_id = activity['requestId']
-            # Potential key err handling
-            try:
-                self.requests[act_id]
-            except KeyError:
-                continue
-            # Get or set extant value
-            activity_list = self.requests[act_id].setdefault('activity', [])
-            activity_list.append(activity)
-            # Sort by ID (IDs appear to increment in QScend)
-            # append to requests in list
-            sorted_list = sorted(activity_list, key=lambda i: (i['id']))
-            self.requests[act_id]['activity'] = sorted_list
-            """
-
     def groom_depts(self):
         raw_depts = json.loads(self.qclient.get_departments())
         for dept in raw_depts:
             self.departments[dept['id']] = dept['name']
+
+    def groom_published_types(self):
+        """
+        This step is necessary because not
+        every day's requests call every type
+
+        """
+        final_types = {}
+        for key, entry in self.types.items():
+            if not self.types[key]['isPrivate']:
+                del entry['isPrivate']
+                del entry['parent']
+                if self.types[key]['ancestor']:
+                    entry['ancestor_id'] = self.types[key]['ancestor']['id']
+                    entry['ancestor_name'] = self.types[key]['ancestor']['name']
+                else:
+                    entry['ancestor_id'] = 0
+                    entry['ancestor_name'] = None
+                del entry['ancestor']
+                final_types[key] = entry
+        self.types = final_types
 
     def groom_types(self):
         """
@@ -183,16 +198,29 @@ class QScendPipeline():
         for key, entry in self.types.items():
             # Add 'ancestor' key/value
             if entry['parent'] != 0:
-                self.types[key]['ancestor'] = self._get_ancestor(self.types[key])
+                self.types[key]['ancestor'] = self._get_ancestor(
+                    q_type=self.types[key],
+                    key=key
+                )
+            try:
+                self.types[key]['ancestor']
+            except KeyError:
+                self.types[key]['ancestor'] = None
 
-    def _get_ancestor(self, q_type):
+
+    def _get_ancestor(self, q_type, key):
         """
         Recurse to find ancestor node
         """
         if q_type['parent'] == 0:
+            q_type['id'] = key
             return q_type
         parent_id = q_type['parent']
-        return self._get_ancestor(self.types[parent_id])
+
+        return self._get_ancestor(
+            q_type=self.types[parent_id],
+            key=parent_id
+        )
 
     @staticmethod
     def get_statuses(status_no):

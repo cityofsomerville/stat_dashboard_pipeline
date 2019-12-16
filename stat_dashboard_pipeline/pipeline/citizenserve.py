@@ -9,6 +9,8 @@ import datetime
 import paramiko
 
 from stat_dashboard_pipeline.clients.citizenserve_client import CitizenServeClient
+from stat_dashboard_pipeline.config import Config
+
 
 class CitizenServePipeline():
 
@@ -16,6 +18,7 @@ class CitizenServePipeline():
         self.cs_client = CitizenServeClient()
         self.permits = {}
         self.types = set()
+        self.categories = self.get_categories()
 
     def run(self):
         """
@@ -30,13 +33,13 @@ class CitizenServePipeline():
         The SFTP dump appears to be 'everything since 2015'
         So we'll overwrite and create a fresh JSON for upload
         """
-        # TODO: Adapt Data Types from config/email
         with open(temp_file, 'r', encoding="ISO-8859-1") as data:
             datareader = csv.DictReader(data, delimiter='\t')
             for row in datareader:
                 permit_id = row['Permit#']
+                permit_type = self.determine_categories(row['PermitType'])
                 self.permits[permit_id] = {
-                    'type': row['PermitType'],
+                    'type': permit_type,
                     'issue_date': self.__format_dates(row['IssueDate']),
                     'application_date': self.__format_dates(row['ApplicationDate']),
                     'status': row['Status'],
@@ -45,7 +48,14 @@ class CitizenServePipeline():
                     'latitude': row['Latitude'],
                     'longitude': row['Longitude']
                 }
-                self.types.add(row['PermitType'])
+
+    def determine_categories(self, permit_type):
+        try:
+            self.categories[permit_type]
+        except KeyError:
+            return permit_type
+        else:
+            return self.categories[permit_type]
 
     def get_data(self):
         try:
@@ -59,3 +69,12 @@ class CitizenServePipeline():
     @staticmethod
     def __format_dates(date):
         return datetime.datetime.strptime(date, '%m/%d/%Y')
+
+    @staticmethod
+    def get_categories():
+        """
+        These are inhereted from the prior repo, and can
+        be updated in 'config/qscend_cat_id_key.json'
+        """
+        config = Config()
+        return config.permit_categories()
