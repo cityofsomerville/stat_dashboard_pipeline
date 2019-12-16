@@ -44,7 +44,6 @@ class CitizenServePipeline():
                     'application_date': self.__format_dates(row['ApplicationDate']),
                     'status': row['Status'],
                     'amount': row['PermitAmount'],
-                    # TODO: Anonymize?
                     'latitude': row['Latitude'],
                     'longitude': row['Longitude']
                 }

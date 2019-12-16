@@ -21,7 +21,6 @@ class CitizenServeClient():
         """
         File nomenclature is similar to: PermitExport09032019.txt
         """
-        # TODO: Make robust for multiday failures
         datestring = (datetime.datetime.now() - timedelta(days=days_prior)).strftime("%m%d%Y")
         return 'PermitExport{datestring}.txt'.format(datestring=datestring)
 

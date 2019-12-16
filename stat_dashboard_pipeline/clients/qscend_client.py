@@ -71,7 +71,6 @@ class QScendClient():
         """
         Find changes to tickets since specific date, which includes new tickets
         Defaulted to 1 by kwarg days of changes
-        TODO: This is kind of a hectic pull, so may need some refinement
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'changes')
         querystring = {

@@ -3,11 +3,12 @@ import logging
 
 import yaml
 
-# Definitions
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QSCEND_CATEGORY_FILE = 'qscend_categories.json'
 PERMIT_CATEGORY_FILE = 'permit_categories.json'
 SOCRATA_CONFIG = 'socrata.json'
+QSCEND_CONFIG = 'qscend_status_codes.json'
+
 
 class Config():
     """
@@ -33,6 +34,11 @@ class Config():
             ROOT_DIR,
             'config',
             SOCRATA_CONFIG
+        ))
+        self.qscend_statuses = self.__parse_json(os.path.join(
+            ROOT_DIR,
+            'config',
+            QSCEND_CONFIG
         ))
 
     @staticmethod

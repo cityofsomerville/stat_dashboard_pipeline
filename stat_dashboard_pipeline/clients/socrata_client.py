@@ -127,7 +127,6 @@ class SocrataClient():
         """
         Convert JSON to temporary CSV file
         for initial upload
-        TODO: Move to pipeline and break into methods
         """
         tempfile = os.path.join(
             ROOT_DIR,
