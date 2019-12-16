@@ -27,18 +27,14 @@ class QScendPipeline():
         """
         Semi-temp master run funct
         """
-        print('[QSCEND] Grooming Departments and Types')
         self.groom_depts()
         self.groom_types()
         self.get_type_ancestry()
 
         # Get Changes
         self.get_changes()
-        print('[QSCEND] Grooming Requests')
         self.groom_changes()
-        print('[QSCEND] Grooming Activities')
         self.groom_activites()
-        print('[QSCEND] Grooming Types for Publication')
         self.groom_published_types()
 
     def get_changes(self):

@@ -15,7 +15,7 @@ import os
 import datetime
 from datetime import timedelta
 import csv
-import pprint
+import logging
 
 from sodapy import Socrata
 
@@ -60,7 +60,7 @@ class SocrataClient():
             360008065493-Setting-a-Row-Identifier-in-the-Socrata-Data-Management-Experience
         """
         if self.dataset_id is None:
-            print('[SOCRATA_CLIENT] No Socrata dataset ID provided')
+            logging.error('[SOCRATA_CLIENT] No Socrata dataset ID provided')
             return
         if self.client is None:
             self._connect()
@@ -73,8 +73,8 @@ class SocrataClient():
             data = self.upsert_qscend(
                 groomed_data=groomed_data
             )
-        print('[SOCRATA_CLIENT] Upserting data')
-        pprint.pprint(self.client.upsert(self.dataset_id, data))
+        logging.info('[SOCRATA_CLIENT] Upserting data')
+        logging.info(self.client.upsert(self.dataset_id, data))
 
     def upsert_citizenserve(self, groomed_data):
         data = []

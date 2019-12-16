@@ -39,7 +39,7 @@ def main():
     try:
         args, vals = getopt.getopt(arguments, unix_options, gnu_options)
     except getopt.error as err:
-        # Return with an error code
+        # Return to term with an error code
         print(str(err))
         sys.exit(2)
 
@@ -47,7 +47,6 @@ def main():
     
     for arg in args:
         if arg[0] in ("-m", "--migrate"):
-            print("[STAT PIPELINE] Migrating")
             stat_pipeline.migrate()
             return
 
@@ -55,7 +54,6 @@ def main():
             stat_pipeline.time_window = vals[0]
             
     # Standard run
-    print("[STAT PIPELINE] Running")
     stat_pipeline.run()
     return
 

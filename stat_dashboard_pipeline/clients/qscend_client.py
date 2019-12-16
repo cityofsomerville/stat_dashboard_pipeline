@@ -1,6 +1,7 @@
 import os
 import datetime
 from datetime import timedelta
+import logging
 
 import requests
 
@@ -37,9 +38,8 @@ class QScendClient():
             params=querystring
         )
         if response.status_code != 200:
-            # TODO: Better error handling, TBD
-            print('[ERROR] : Qscend API')
-            print(response.text)
+            logging.error('[ERROR] : Qscend API')
+            logging.error(response.text)
             return None
         return response.text
 
@@ -84,7 +84,6 @@ class QScendClient():
             "since": self._format_date(time_window),
             "includeCustomFields": False
         }
-        print('[QSCEND_CLIENT] Retrieving Changes')
         return self._generate_response(
             url,
             querystring

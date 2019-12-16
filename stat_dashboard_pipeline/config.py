@@ -1,4 +1,5 @@
 import yaml
+import logging
 
 from stat_dashboard_pipeline.definitions import AUTH_PATH, CATEGORY_PATH, PERMIT_CATEGORY_PATH
 
@@ -16,7 +17,7 @@ class Auth():
             try:
                 creds = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
+                logging.error(exc)
                 return None
         return creds
 
@@ -35,7 +36,7 @@ class Config():
             try:
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
+                logging.error(exc)
                 return None
         return data
 
@@ -44,6 +45,6 @@ class Config():
             try:
                 data = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
+                logging.error(exc)
                 return None
         return data

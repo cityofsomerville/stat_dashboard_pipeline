@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 from datetime import timedelta
+import logging
 
 import paramiko
 
@@ -68,12 +69,12 @@ class CitizenServeClient():
         local_path = self.local_path()
         # Check for already downloaded day file
         if os.path.exists(local_path):
-            print('[CITIZENSERVE_CLIENT] File Exists')
             return
 
         self.connection = self.__create_connection()
-        print('[CITIZENSERVE_CLIENT] Starting Download')
+        logging.info('[CITIZENSERVE_CLIENT] Starting Download')
         if self.__file_exists(remote_path) or retry == 0:
+            logging.info("[CITIZENSERVE_CLIENT] File download")
             self.connection.get(
                 remote_path,
                 local_path,
@@ -81,6 +82,9 @@ class CitizenServeClient():
             )
         elif retry > 0:
             time.sleep(5)
-            print('[CITIZENSERVE_CLIENT] Retry Download')
+            logging.info("[CITIZENSERVE_CLIENT] Retry file download")
             retry = retry - 1
             self.download(retry=retry)
+        else:
+            logging.error("[CITIZENSERVE_CLIENT] File download failed")
+
