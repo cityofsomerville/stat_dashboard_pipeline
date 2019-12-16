@@ -46,7 +46,7 @@ class QScendClient():
     @staticmethod
     def _format_date(time_window=0):
         return requests.utils.quote(
-            (datetime.datetime.now() - timedelta(days=time_window)).strftime("%m/%d/%Y")
+            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
         )
 
     def get_by_date_range(self, ticket_id=None, time_window=7):

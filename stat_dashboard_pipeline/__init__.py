@@ -25,9 +25,10 @@ class Pipeline():
     Parent pipeline class, with methods favorable to the enduser CLI
 
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.citizenserve = CitizenServePipeline()
-        self.qscend = QScendPipeline()
+        self.time_window = kwargs.get('time_window', 1)
+        self.qscend = None
 
     def run(self):
         """
@@ -38,6 +39,9 @@ class Pipeline():
             self.qscend.types
             self.citizenserve.permits
         """
+        self.qscend = QScendPipeline(
+            time_window=self.time_window
+        )
         self.__prepare()
 
         # QScend

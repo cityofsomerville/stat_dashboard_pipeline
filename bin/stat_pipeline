@@ -6,10 +6,13 @@ from stat_dashboard_pipeline import Pipeline
 
 
 class StatPipeline():
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.pipeline = Pipeline()
+        self.time_window = kwargs.get('time_window', 1)
 
     def run(self):
+        if self.time_window:
+            self.pipeline.time_window = self.time_window
         self.pipeline.run()
 
     def migrate(self):
@@ -28,8 +31,8 @@ def main():
         CSV files for uploading to Socrata via UI
 
     """
-    unix_options = ":m"
-    gnu_options = ["migrate"]
+    unix_options = ":mt"
+    gnu_options = ["migrate", "time"]
     cmd_args = sys.argv
     arguments = cmd_args[1:]
 
@@ -39,14 +42,18 @@ def main():
         # Return with an error code
         print(str(err))
         sys.exit(2)
-    stat_pipeline = StatPipeline()
 
+    stat_pipeline = StatPipeline()
+    
     for arg in args:
         if arg[0] in ("-m", "--migrate"):
             print("[STAT PIPELINE] Migrating")
             stat_pipeline.migrate()
             return
 
+        if arg[0] in ("-t", "--time"):
+            stat_pipeline.time_window = vals[0]
+            
     # Standard run
     print("[STAT PIPELINE] Running")
     stat_pipeline.run()
