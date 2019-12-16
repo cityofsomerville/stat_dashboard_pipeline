@@ -17,6 +17,8 @@ pip install -e .
 pip install .
 
 ```
+## Credentials
+Copy the `config/sample_auth.yaml` file and rename it to `auth.yaml`. Put the credentials in the file within the empty quotation marks and save.
 
 ## Run
 ```

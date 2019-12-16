@@ -5,19 +5,13 @@ import logging
 
 import requests
 
-from stat_dashboard_pipeline.config import Auth
+from stat_dashboard_pipeline.config import Config
 
 
 class QScendClient():
 
     def __init__(self):
-        self.credentials = self.__load_credentials()
-
-    @staticmethod
-    def __load_credentials():
-        # TODO: build into Auth methods
-        auth = Auth()
-        return auth.credentials()
+        self.credentials = Config().credentials
 
     def _generate_response(self, url, querystring):
         headers = {

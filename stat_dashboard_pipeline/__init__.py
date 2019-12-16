@@ -10,7 +10,7 @@ import datetime
 from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
 from stat_dashboard_pipeline.clients.socrata_client import SocrataClient
-from stat_dashboard_pipeline.definitions import ROOT_DIR
+from stat_dashboard_pipeline.config import ROOT_DIR
 
 
 NAME = "stat_dashboard_pipeline"

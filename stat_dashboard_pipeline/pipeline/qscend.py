@@ -240,4 +240,4 @@ class QScendPipeline():
         be updated in 'config/qscend_cat_id_key.json'
         """
         config = Config()
-        return config.qscend_categories()
+        return config.qscend_categories

@@ -62,7 +62,7 @@ class CitizenServePipeline():
         try:
             self.cs_client.download()
         except paramiko.ssh_exception.AuthenticationException:
-            logging.error('Auth Error, Citizenserve')
+            logging.error('Credentials failure, Citizenserve SFTP')
             return None
         return self.cs_client.local_path()
 
@@ -77,4 +77,4 @@ class CitizenServePipeline():
         be updated in 'config/qscend_cat_id_key.json'
         """
         config = Config()
-        return config.permit_categories()
+        return config.permit_categories

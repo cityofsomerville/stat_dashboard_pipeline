@@ -6,22 +6,15 @@ import logging
 
 import paramiko
 
-from stat_dashboard_pipeline.config import Auth
-from stat_dashboard_pipeline.definitions import ROOT_DIR
+from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 
 class CitizenServeClient():
 
     def __init__(self):
-        self._credentials = self.__load_credentials()
+        self.credentials = Config().credentials
         self.connection = None
         self.filename = None
-
-    @staticmethod
-    def __load_credentials():
-        # TODO: build into Auth methods
-        auth = Auth()
-        return auth.credentials()
 
     @staticmethod
     def __generate_filename(days_prior=1):
@@ -34,17 +27,17 @@ class CitizenServeClient():
 
     def __create_connection(self):
         transport = paramiko.Transport(
-            sock=(self._credentials['sftp_server'], self._credentials['sftp_port'])
+            sock=(self.credentials['sftp_server'], self.credentials['sftp_port'])
         )
         transport.connect(
-            username=self._credentials['sftp_user'],
-            password=self._credentials['sftp_pass']
+            username=self.credentials['sftp_user'],
+            password=self.credentials['sftp_pass']
         )
         return paramiko.SFTPClient.from_transport(transport)
 
     def __remote_path(self):
         return os.path.join(
-            self._credentials['sftp_remote_dir'],
+            self.credentials['sftp_remote_dir'],
             self.filename
         )
 
@@ -87,4 +80,3 @@ class CitizenServeClient():
             self.download(retry=retry)
         else:
             logging.error("[CITIZENSERVE_CLIENT] File download failed")
-
