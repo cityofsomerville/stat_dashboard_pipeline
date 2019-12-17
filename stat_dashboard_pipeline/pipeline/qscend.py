@@ -28,6 +28,10 @@ class QScendPipeline():
         Semi-temp master run funct
         """
         self.groom_depts()
+        # If 403/Forbidden, the IP isn't whitelisted
+        if self.departments == {}:
+            return
+
         self.groom_types()
         self.get_type_ancestry()
 
@@ -41,9 +45,12 @@ class QScendPipeline():
         """
         Call and clean response from QScendClient class
         """
-        self.raw = json.loads(
-            self.qclient.get_changes(time_window=self.time_window)
-        )
+        try:
+            self.raw = json.loads(
+                self.qclient.get_changes(time_window=self.time_window)
+            )
+        except TypeError:
+            return
         # Delete the unneeded keys
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
@@ -127,7 +134,10 @@ class QScendPipeline():
             }
 
     def groom_depts(self):
-        raw_depts = json.loads(self.qclient.get_departments())
+        try:
+            raw_depts = json.loads(self.qclient.get_departments())
+        except TypeError:
+            return
         for dept in raw_depts:
             self.departments[dept['id']] = dept['name']
 
@@ -156,7 +166,10 @@ class QScendPipeline():
         """
         Call API, get raw types, munge into dict
         """
-        raw_types = json.loads(self.qclient.get_types())
+        try:
+            raw_types = json.loads(self.qclient.get_types())
+        except TypeError:
+            return
         for q_type in raw_types:
             type_id = q_type['id']
             # Unneeded values

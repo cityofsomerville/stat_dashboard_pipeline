@@ -94,6 +94,10 @@ class Pipeline():
 
     def store_qscend(self):
         # Activities
+        # No need to store an empty dataset
+        if self.qscend.activities == {}:
+            return
+
         socrata = SocrataClient(
             service_data=self.qscend.activities,
             dataset_id=self.socrata_datasets['somerville_services_activities']
