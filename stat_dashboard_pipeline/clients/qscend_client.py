@@ -13,7 +13,7 @@ class QScendClient():
     def __init__(self):
         self.credentials = Config().credentials
 
-    def _generate_response(self, url, querystring):
+    def generate_response(self, url, querystring):
         headers = {
             'User-Agent': "SomerStatDash/0.0.1",
             'Accept': "*/*",
@@ -38,7 +38,7 @@ class QScendClient():
         return response.text
 
     @staticmethod
-    def _format_date(time_window=0):
+    def format_date(time_window=0):
         return requests.utils.quote(
             (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
         )
@@ -51,8 +51,8 @@ class QScendClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'get')
 
-        current_date = self._format_date()
-        previous_date = self._format_date(time_window)
+        current_date = self.format_date()
+        previous_date = self.format_date(time_window)
 
         querystring = {
             "createDateMax": current_date,
@@ -62,7 +62,7 @@ class QScendClient():
             querystring['id'] = str(ticket_id)
             querystring['createDateMin'] = None
 
-        return self._generate_response(
+        return self.generate_response(
             url,
             querystring
         )
@@ -74,10 +74,10 @@ class QScendClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'changes')
         querystring = {
-            "since": self._format_date(time_window),
+            "since": self.format_date(time_window),
             "includeCustomFields": False
         }
-        return self._generate_response(
+        return self.generate_response(
             url,
             querystring
         )
@@ -91,7 +91,7 @@ class QScendClient():
         if type_id is not None:
             querystring['id'] = str(type_id)
 
-        return self._generate_response(
+        return self.generate_response(
             url,
             querystring
         )
@@ -102,11 +102,11 @@ class QScendClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'dump')
         querystring = {
-            "start": self._format_date(time_window),
-            "end": self._format_date()
+            "start": self.format_date(time_window),
+            "end": self.format_date()
         }
 
-        return self._generate_response(
+        return self.generate_response(
             url,
             querystring
         )
@@ -117,7 +117,7 @@ class QScendClient():
         """
         url = os.path.join(self.credentials['qscend_url'], 'departments', 'get')
         querystring = {}
-        return self._generate_response(
+        return self.generate_response(
             url,
             querystring
         )
