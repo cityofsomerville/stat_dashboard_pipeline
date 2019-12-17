@@ -5,8 +5,6 @@
  - MIT license, code of conduct
 
 ### Checklist:
- - [ ] Tests are Greened
- - [ ] Linted
  - [ ] README Updated
 
 #### Review: [github handle]
