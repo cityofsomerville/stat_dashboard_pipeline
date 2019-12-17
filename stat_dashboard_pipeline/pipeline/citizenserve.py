@@ -61,6 +61,11 @@ class CitizenServePipeline():
             self.cs_client.download()
         except paramiko.ssh_exception.AuthenticationException:
             logging.error('Credentials failure, Citizenserve SFTP')
+            self.cs_client.connection.close()
+            return None
+        except paramiko.ssh_exception.SSHException:
+            logging.error('Credentials failure, Citizenserve SFTP')
+            self.cs_client.connection.close()
             return None
         return self.cs_client.local_path()
 

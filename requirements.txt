@@ -4,3 +4,4 @@ pylint == 2.3.1
 paramiko == 2.6.0
 pyyaml == 5.1.2
 freezegun == 0.3.12
+ddt == 1.2.2

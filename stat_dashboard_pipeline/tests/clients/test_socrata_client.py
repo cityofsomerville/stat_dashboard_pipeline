@@ -26,6 +26,16 @@ class SocrataClientTest(unittest.TestCase):
                 'test_3': 'three_three'
             }
         }
+    
+    def tearDown(self):
+        try:
+            os.remove(os.path.join(
+                ROOT_DIR,
+                'tmp',
+                'test.csv'
+            ))
+        except FileNotFoundError:
+            pass
 
     def test_dict_transform(self):
         output = [
