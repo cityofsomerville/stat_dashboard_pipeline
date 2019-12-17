@@ -93,6 +93,7 @@ class CitizenServeClientTest(unittest.TestCase):
         # This should only allow request 2 through
         with self.assertRaises(KeyError):
             print(self.qscend.requests[1])
+        with self.assertRaises(KeyError):
             print(self.qscend.requests[3])
 
         request = self.qscend.requests[2]
