@@ -94,22 +94,6 @@ class SocrataClient():
                 data.append(row)
         return data
 
-    def replace_data_json(self):
-        """
-        Full dataset replacement
-        """
-        if self.client is None:
-            self._connect()
-        tempfile = os.path.join(
-            ROOT_DIR,
-            'tmp',
-            'soctemp.csv'
-        )
-        data = open(tempfile)
-        # NOTE: This isn't working, (HTTPS timeout)
-        # but can be/was uploaded using UI
-        self.client.replace(self.dataset_id, data)
-
     def dict_transform(self):
         fieldnames = set()
         final_report = []

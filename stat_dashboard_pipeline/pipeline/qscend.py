@@ -38,7 +38,7 @@ class QScendPipeline():
         # Get Changes
         self.get_changes()
         self.groom_changes()
-        self.groom_activites()
+        self.groom_activities()
         self.groom_published_types()
 
     def get_changes(self):
@@ -104,7 +104,7 @@ class QScendPipeline():
     def get_date(date):
         return datetime.datetime.strptime(date, '%m/%d/%Y %I:%M %p')
 
-    def groom_activites(self):
+    def groom_activities(self):
         """
         Create a subtable of activites with a
         FK equivalent keyed on request ID
@@ -116,21 +116,19 @@ class QScendPipeline():
             activity['action_date'] = action_date
 
             # Parse Routes
+            activity['route'] = []
             for route in activity['routeId'].split(','):
-                # This is a little dicey, but seems to work in AD2019
                 # Names are typically u/n like "gmartin"
                 # and departments are usually formatted like "DPWAdmin"
                 if route.strip() and route.strip()[0].isupper():
-                    activity['route'] = route.strip()
-                else:
-                    activity['route'] = None
+                    activity['route'].append(route.strip())
 
             self.activities[activity['id']] = {
                 'request_id': activity['requestId'],
                 'action_date': activity['action_date'],
                 'code': activity['code'],
                 'codeDesc': activity['codeDesc'],
-                'route': activity['route']
+                'route': str(activity['route'])
             }
 
     def groom_depts(self):

@@ -17,7 +17,7 @@ class CitizenServeClient():
         self.filename = None
 
     @staticmethod
-    def __generate_filename(days_prior=1):
+    def generate_filename(days_prior=1):
         """
         File nomenclature is similar to: PermitExport09032019.txt
         """
@@ -56,7 +56,7 @@ class CitizenServeClient():
             return True
 
     def download(self, retry=5):
-        self.filename = self.__generate_filename()
+        self.filename = self.generate_filename()
         remote_path = self.__remote_path()
         local_path = self.local_path()
         # Check for already downloaded day file
