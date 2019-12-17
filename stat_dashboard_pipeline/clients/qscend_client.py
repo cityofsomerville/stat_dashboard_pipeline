@@ -1,22 +1,17 @@
 import os
 import datetime
 from datetime import timedelta
+import logging
 
 import requests
 
-from stat_dashboard_pipeline.config import Auth
+from stat_dashboard_pipeline.config import Config
 
 
 class QScendClient():
 
     def __init__(self):
-        self.credentials = self.__load_credentials()
-
-    @staticmethod
-    def __load_credentials():
-        # TODO: build into Auth methods
-        auth = Auth()
-        return auth.credentials()
+        self.credentials = Config().credentials
 
     def _generate_response(self, url, querystring):
         headers = {
@@ -37,16 +32,15 @@ class QScendClient():
             params=querystring
         )
         if response.status_code != 200:
-            # TODO: Better error handling, TBD
-            print('[ERROR] : Qscend API')
-            print(response.text)
+            logging.error('[ERROR] : Qscend API')
+            logging.error(response.text)
             return None
         return response.text
 
     @staticmethod
     def _format_date(time_window=0):
         return requests.utils.quote(
-            (datetime.datetime.now() - timedelta(days=time_window)).strftime("%m/%d/%Y")
+            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
         )
 
     def get_by_date_range(self, ticket_id=None, time_window=7):
@@ -77,14 +71,12 @@ class QScendClient():
         """
         Find changes to tickets since specific date, which includes new tickets
         Defaulted to 1 by kwarg days of changes
-        TODO: This is kind of a hectic pull, so may need some refinement
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'changes')
         querystring = {
             "since": self._format_date(time_window),
             "includeCustomFields": False
         }
-        print('[QSCEND_CLIENT] Retrieving Changes')
         return self._generate_response(
             url,
             querystring

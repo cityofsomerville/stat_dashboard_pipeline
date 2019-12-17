@@ -4,30 +4,35 @@ Pipeline
 """
 import os
 import shutil
+import logging
+import datetime
 
 from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
 from stat_dashboard_pipeline.clients.socrata_client import SocrataClient
-from stat_dashboard_pipeline.definitions import ROOT_DIR
+from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 
 NAME = "stat_dashboard_pipeline"
-# TODO: Move to config
-QS_REQUESTS_ID = '4pyi-uqq6'
-QS_ACTIVITIES_ID = 'f7b7-bfkg'
-QS_TYPES_ID = 'ikh2-c6hz'
-CS_DATASET_ID = 'vxgw-vmky'
+
 CITIZENSERVE_UPDATE_WINDOW = 30
 MIGRATION_UPDATE_WINDOW = 30
+
+LOGGING_FILE = 'stat_dashboard.log'
+LOG_LEVEL = logging.DEBUG
+logging.basicConfig(filename=os.path.join(ROOT_DIR, LOGGING_FILE), level=LOG_LEVEL)
+
 
 class Pipeline():
     """
     Parent pipeline class, with methods favorable to the enduser CLI
 
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.citizenserve = CitizenServePipeline()
-        self.qscend = QScendPipeline()
+        self.time_window = kwargs.get('time_window', 1)
+        self.qscend = None
+        self.socrata_datasets = Config().socrata_datasets
 
     def run(self):
         """
@@ -38,23 +43,39 @@ class Pipeline():
             self.qscend.types
             self.citizenserve.permits
         """
+        self.qscend = QScendPipeline(
+            time_window=self.time_window
+        )
+        logging.info(
+            "[PIPELINE] Init: %s",
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        )
         self.__prepare()
 
         # QScend
+        logging.info("[PIPELINE] Running QScend pipeline")
         self.qscend.run()
+        logging.info("[PIPELINE] Storing QScend data")
         self.store_qscend()
 
         # Citizenserve
+        logging.info("[PIPELINE] Running Citizenserve pipeline")
         self.citizenserve.run()
+        logging.info("[PIPELINE] Storing Citizenserve data")
         self.store_citizenserve()
 
         # Cleanup Storage Dir
+        logging.info("[PIPELINE] Cleaning temp storage")
         self.__cleanup()
 
     def migrate(self):
         """
         Citizenserve always dumps all data, so no migration needed
         """
+        logging.info(
+            "[PIPELINE] Migrate: %s",
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        )
         self.__prepare()
         # QScend
         self.qscend.time_window = MIGRATION_UPDATE_WINDOW
@@ -66,31 +87,34 @@ class Pipeline():
         # Upsert Citizenserve Permit Data
         socrata = SocrataClient(
             service_data=self.citizenserve.permits,
-            dataset_id=CS_DATASET_ID,
+            dataset_id=self.socrata_datasets['somerville_permits'],
             citizenserve_update_window=CITIZENSERVE_UPDATE_WINDOW
         )
-        print('[SOCRATA] Storing Citizenserve')
         socrata.run()
 
     def store_qscend(self):
         # Activities
+        # No need to store an empty dataset
+        if self.qscend.activities == {}:
+            return
+
         socrata = SocrataClient(
             service_data=self.qscend.activities,
-            dataset_id=QS_ACTIVITIES_ID
+            dataset_id=self.socrata_datasets['somerville_services_activities']
         )
-        print('[SOCRATA] Storing QSCend Activities')
+        logging.info('[SOCRATA] Storing QSCend Activities')
         socrata.run()
 
         # Requests
         socrata.service_data = self.qscend.requests
-        socrata.dataset_id = QS_REQUESTS_ID
-        print('[SOCRATA] Storing QSCend Requests')
+        socrata.dataset_id = self.socrata_datasets['somerville_services']
+        logging.info('[SOCRATA] Storing QSCend Requests')
         socrata.run()
 
         # Types
         socrata.service_data = self.qscend.types
-        socrata.dataset_id = QS_TYPES_ID
-        print('[SOCRATA] Storing QSCend Types')
+        socrata.dataset_id = self.socrata_datasets['somerville_services_types']
+        logging.info('[SOCRATA] Storing QSCend Types')
         socrata.run()
 
     def migrate_qscend(self):
@@ -101,7 +125,7 @@ class Pipeline():
         # Activites
         socrata = SocrataClient(
             service_data=self.qscend.activities,
-            dataset_id=QS_ACTIVITIES_ID
+            dataset_id=self.socrata_datasets['somerville_services']
         )
         socrata.json_to_csv(filename='qscend_activities.csv')
         # Requests

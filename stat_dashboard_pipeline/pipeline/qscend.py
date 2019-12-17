@@ -27,27 +27,30 @@ class QScendPipeline():
         """
         Semi-temp master run funct
         """
-        print('[QSCEND] Grooming Departments and Types')
         self.groom_depts()
+        # If 403/Forbidden, the IP isn't whitelisted
+        if self.departments == {}:
+            return
+
         self.groom_types()
         self.get_type_ancestry()
 
         # Get Changes
         self.get_changes()
-        print('[QSCEND] Grooming Requests')
         self.groom_changes()
-        print('[QSCEND] Grooming Activities')
         self.groom_activites()
-        print('[QSCEND] Grooming Types for Publication')
         self.groom_published_types()
 
     def get_changes(self):
         """
         Call and clean response from QScendClient class
         """
-        self.raw = json.loads(
-            self.qclient.get_changes(time_window=self.time_window)
-        )
+        try:
+            self.raw = json.loads(
+                self.qclient.get_changes(time_window=self.time_window)
+            )
+        except TypeError:
+            return
         # Delete the unneeded keys
         del self.raw['deleted'] # Empty
         del self.raw['attachment'] # Unusable
@@ -108,23 +111,9 @@ class QScendPipeline():
         """
         raw_activities = self.raw['activity']
         for activity in raw_activities:
-            # Delete unused
-            # TODO: Move to config
-            del activity['attachments']
-            del activity['notify']
-            del activity['user']
-            del activity['files']
-            del activity['isEditable']
-            del activity['actDate']
-            del activity['actDateUnix']
-
             # Convert to datetime
             action_date = self.get_date(activity['displayDate'])
             activity['action_date'] = action_date
-            del activity['displayDate']
-
-            # TODO: Comment parsing
-            del activity['comments']
 
             # Parse Routes
             for route in activity['routeId'].split(','):
@@ -135,7 +124,6 @@ class QScendPipeline():
                     activity['route'] = route.strip()
                 else:
                     activity['route'] = None
-            del activity['routeId']
 
             self.activities[activity['id']] = {
                 'request_id': activity['requestId'],
@@ -146,7 +134,10 @@ class QScendPipeline():
             }
 
     def groom_depts(self):
-        raw_depts = json.loads(self.qclient.get_departments())
+        try:
+            raw_depts = json.loads(self.qclient.get_departments())
+        except TypeError:
+            return
         for dept in raw_depts:
             self.departments[dept['id']] = dept['name']
 
@@ -175,7 +166,10 @@ class QScendPipeline():
         """
         Call API, get raw types, munge into dict
         """
-        raw_types = json.loads(self.qclient.get_types())
+        try:
+            raw_types = json.loads(self.qclient.get_types())
+        except TypeError:
+            return
         for q_type in raw_types:
             type_id = q_type['id']
             # Unneeded values
@@ -224,24 +218,8 @@ class QScendPipeline():
 
     @staticmethod
     def get_statuses(status_no):
-        """
-        From QScendAPI docs:
-        valid values are 0 (open), 1 (closed), 3 (in progress), and 4 (on hold).
-        """
-        # TODO: move to config
-        valid_statuses = {
-            0: 'Open',
-            1: 'Closed',
-            3: 'In Progress',
-            4: 'On Hold'
-        }
-        return valid_statuses[status_no]
+        return Config().qscend_statuses[str(status_no)]
 
     @staticmethod
     def get_categories():
-        """
-        These are inhereted from the prior repo, and can
-        be updated in 'config/qscend_cat_id_key.json'
-        """
-        config = Config()
-        return config.qscend_categories()
+        return Config().qscend_categories

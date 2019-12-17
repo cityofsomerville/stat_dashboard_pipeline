@@ -15,19 +15,18 @@ import os
 import datetime
 from datetime import timedelta
 import csv
-import pprint
+import logging
 
 from sodapy import Socrata
 
-from stat_dashboard_pipeline.config import Auth
-from stat_dashboard_pipeline.definitions import ROOT_DIR
+from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 SOCRATA_MASTER_TIMEOUT = 600
 
 class SocrataClient():
 
     def __init__(self, **kwargs):
-        self._credentials = self.__load_credentials()
+        self.credentials = Config().credentials
         self.client = None
         self.service_data = kwargs.get('service_data', None)
         self.dataset_id = kwargs.get('dataset_id', None)
@@ -36,18 +35,12 @@ class SocrataClient():
     def run(self):
         self.upsert()
 
-    @staticmethod
-    def __load_credentials():
-        # TODO: build into Auth methods
-        auth = Auth()
-        return auth.credentials()
-
     def _connect(self):
         self.client = Socrata(
-            self._credentials['socrata_url'],
-            self._credentials['socrata_token'],
-            self._credentials['socrata_username'],
-            self._credentials['socrata_password']
+            self.credentials['socrata_url'],
+            self.credentials['socrata_token'],
+            self.credentials['socrata_username'],
+            self.credentials['socrata_password']
         )
         # See:
         # https://stackoverflow.com/questions/47514331/readtimeout-error-for-api-data-with-sodapy-client
@@ -60,7 +53,7 @@ class SocrataClient():
             360008065493-Setting-a-Row-Identifier-in-the-Socrata-Data-Management-Experience
         """
         if self.dataset_id is None:
-            print('[SOCRATA_CLIENT] No Socrata dataset ID provided')
+            logging.error('[SOCRATA_CLIENT] No Socrata dataset ID provided')
             return
         if self.client is None:
             self._connect()
@@ -73,8 +66,8 @@ class SocrataClient():
             data = self.upsert_qscend(
                 groomed_data=groomed_data
             )
-        print('[SOCRATA_CLIENT] Upserting data')
-        pprint.pprint(self.client.upsert(self.dataset_id, data))
+        logging.info('[SOCRATA_CLIENT] Upserting data')
+        logging.info(self.client.upsert(self.dataset_id, data))
 
     def upsert_citizenserve(self, groomed_data):
         data = []
@@ -134,7 +127,6 @@ class SocrataClient():
         """
         Convert JSON to temporary CSV file
         for initial upload
-        TODO: Move to pipeline and break into methods
         """
         tempfile = os.path.join(
             ROOT_DIR,

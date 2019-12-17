@@ -5,6 +5,7 @@ Raw CSV SFTP Dumps -> Socrata Storable JSON
 """
 import csv
 import datetime
+import logging
 
 import paramiko
 
@@ -17,7 +18,6 @@ class CitizenServePipeline():
     def __init__(self):
         self.cs_client = CitizenServeClient()
         self.permits = {}
-        self.types = set()
         self.categories = self.get_categories()
 
     def run(self):
@@ -44,7 +44,6 @@ class CitizenServePipeline():
                     'application_date': self.__format_dates(row['ApplicationDate']),
                     'status': row['Status'],
                     'amount': row['PermitAmount'],
-                    # TODO: Anonymize?
                     'latitude': row['Latitude'],
                     'longitude': row['Longitude']
                 }
@@ -61,8 +60,7 @@ class CitizenServePipeline():
         try:
             self.cs_client.download()
         except paramiko.ssh_exception.AuthenticationException:
-            # TODO: Handle error
-            print('Auth Error, Citizenserve')
+            logging.error('Credentials failure, Citizenserve SFTP')
             return None
         return self.cs_client.local_path()
 
@@ -77,4 +75,4 @@ class CitizenServePipeline():
         be updated in 'config/qscend_cat_id_key.json'
         """
         config = Config()
-        return config.permit_categories()
+        return config.permit_categories

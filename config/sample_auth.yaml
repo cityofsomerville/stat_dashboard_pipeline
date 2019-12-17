@@ -1,5 +1,6 @@
 # Somerville Data Pipeline auth keys
-# This is a sample Auth config. Add items to keys and change name to `auth.yaml`
+# This is a sample auth secrets config file. 
+# Add items to keys and change name to `auth.yaml`
 
 # SFTP credentials
 sftp_server: ''
