@@ -1,4 +1,3 @@
-import os
 import unittest
 import datetime
 
@@ -6,7 +5,6 @@ from freezegun import freeze_time
 import ddt
 
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
-from stat_dashboard_pipeline.config import ROOT_DIR
 
 
 @ddt.ddt
@@ -94,14 +92,14 @@ class CitizenServeClientTest(unittest.TestCase):
         self.qscend.groom_changes()
         # This should only allow request 2 through
         with self.assertRaises(KeyError):
-            self.qscend.requests[1]
-            self.qscend.requests[3]
+            print(self.qscend.requests[1])
+            print(self.qscend.requests[3])
 
         request = self.qscend.requests[2]
         self.assertEqual(request['last_modified'], datetime.datetime.now())
-        self.assertEqual(request['type'], 250) 
-        self.assertEqual(request['ancestor'], 0) 
-        self.assertEqual(request['origin'], 'Test Harness') 
+        self.assertEqual(request['type'], 250)
+        self.assertEqual(request['ancestor'], 0)
+        self.assertEqual(request['origin'], 'Test Harness')
         self.assertEqual(request['category'], None)
 
     @freeze_time("2012-01-14 16:30")
