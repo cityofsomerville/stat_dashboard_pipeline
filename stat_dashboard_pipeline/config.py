@@ -43,7 +43,7 @@ class Config():
 
     @staticmethod
     def __parse_json(file):
-        if not (os.path.exists(file)):
+        if not os.path.exists(file):
             logging.error('[CONFIG] Missing file: %s', file)
             return {}
         with open(file, 'r') as stream:

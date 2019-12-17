@@ -26,7 +26,7 @@ class SocrataClientTest(unittest.TestCase):
                 'test_3': 'three_three'
             }
         }
-    
+
     def tearDown(self):
         try:
             os.remove(os.path.join(

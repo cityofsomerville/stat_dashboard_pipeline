@@ -40,8 +40,8 @@ class CitizenServePipeline():
                 permit_type = self.determine_categories(row['PermitType'])
                 self.permits[permit_id] = {
                     'type': permit_type,
-                    'issue_date': self.__format_dates(row['IssueDate']),
-                    'application_date': self.__format_dates(row['ApplicationDate']),
+                    'issue_date': self.format_dates(row['IssueDate']),
+                    'application_date': self.format_dates(row['ApplicationDate']),
                     'status': row['Status'],
                     'amount': row['PermitAmount'],
                     'latitude': row['Latitude'],
@@ -70,7 +70,7 @@ class CitizenServePipeline():
         return self.cs_client.local_path()
 
     @staticmethod
-    def __format_dates(date):
+    def format_dates(date):
         return datetime.datetime.strptime(date, '%m/%d/%Y')
 
     @staticmethod
