@@ -26,7 +26,7 @@ stat_pipeline
 ```
 
 ## Migrate
-#### NOTE - Does not store in Socrata
+**NOTE:** Does not store in Socrata
 To initialize the data for the datasets: Simple one-off queries that dump to CSV files for upload to the Somerville Socrata instance via the UI. 
 ```
 stat_pipeline -m 
@@ -35,11 +35,13 @@ stat_pipeline --migrate
 ```
 
 ## Run Unit Tests
+**NOTE:** These should run as acceptance tests in github
 ```
 python setup.py test
 ```
 
 ## Lint
+**NOTE:** These should run as acceptance tests in github
 ```
 python setup.py lint
 ```
