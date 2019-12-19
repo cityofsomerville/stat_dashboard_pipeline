@@ -111,6 +111,13 @@ class QScendPipeline():
         """
         raw_activities = self.raw['activity']
         for activity in raw_activities:
+            request_id = activity['requestId']
+            # Ditch `isPrivate` request IDs
+            try:
+                self.requests[request_id]
+            except KeyError:
+                continue
+
             # Convert to datetime
             action_date = self.get_date(activity['displayDate'])
             activity['action_date'] = action_date
@@ -123,8 +130,18 @@ class QScendPipeline():
                 if route.strip() and route.strip()[0].isupper():
                     activity['route'].append(route.strip())
 
+            # Find first action_date
+            # Set created_on in self.requests column
+            try:
+                self.requests[request_id]['created_on']
+            except KeyError:
+                self.requests[request_id]['created_on'] = action_date
+            else:
+                if self.requests[request_id]['created_on'] > action_date:
+                    self.requests[request_id]['created_on'] = action_date
+
             self.activities[activity['id']] = {
-                'request_id': activity['requestId'],
+                'request_id': request_id,
                 'action_date': activity['action_date'],
                 'code': activity['code'],
                 'codeDesc': activity['codeDesc'],

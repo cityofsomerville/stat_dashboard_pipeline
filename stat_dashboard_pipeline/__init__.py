@@ -79,12 +79,14 @@ class Pipeline():
             "[PIPELINE] Migrate: %s",
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         )
+        self.qscend = QScendPipeline(
+            time_window=MIGRATION_UPDATE_WINDOW
+        )
         self.__prepare()
         # QScend
-        self.qscend.time_window = MIGRATION_UPDATE_WINDOW
         self.qscend.run()
         self.citizenserve.run()
-        self.migrate_qscend()
+        self.dump_to_csv()
 
     def store_citizenserve(self):
         # Upsert Citizenserve Permit Data
@@ -120,7 +122,7 @@ class Pipeline():
         logging.info('[SOCRATA] Storing QSCend Types')
         socrata.run()
 
-    def migrate_qscend(self):
+    def dump_to_csv(self):
         """
         This is an initial 'create CSV' method for migrating
         large datasets and instantiating them in the Socrata UI
