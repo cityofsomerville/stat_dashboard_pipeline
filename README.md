@@ -2,7 +2,12 @@
 City of Somerville's Somerstat Dashboard pipeline code.
 
 ## Intro
-This code hits several endpoints based on clients built to the API specs, grooms and deidentifies data to city spec, and uploads the groomed data into Socrata (and other) endpoints.
+This code hits several endpoints based on clients built to the API specs, grooms and deidentifies data to city spec, and uploads the groomed data into prepared Socrata endpoints.
+
+This is the companion repo to the [stat_dashboard_frontend](https://github.com/cityofsomerville/stat_dashboard_frontend)
+
+## Issues
+Please file found bugs or other issues here in the github repo, it's maintained and monitored. Would you like to contribute a fix? Please do!
 
 ## Install
 <!-- NOTE: This may be replaced by a pypi package, TBD. -->
