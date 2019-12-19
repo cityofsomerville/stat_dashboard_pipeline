@@ -111,23 +111,38 @@ class CitizenServeClientTest(unittest.TestCase):
 
     @freeze_time("2012-01-14 16:30")
     @ddt.data([
-        {'activity': [
-            {
+        {
+            'activity': [{
                 'id': 1,
                 'routeId': 'yro, TestHarness, DPW',
                 'displayDate': '1/14/2012 4:30 PM',
                 'requestId': 2,
                 'code': 15,
                 'codeDesc': 'Test'
+            }]
+        },
+        {
+            2: {
+                'typeId': 350,
+                'displayLastAction': '1/14/2012 4:30 PM',
+                'dept': 'Parking',
+                'latitude': 0,
+                'longitude': 0,
+                'status': 1,
+                'origin': 'Test Harness',
+                'comment': 'PII',
+                'reporter': 'PII'
             }
-        ]}
+        }
     ])
     @ddt.unpack
-    def test_groom_activities(self, raw_data):
+    def test_groom_activities(self, raw_data, groomed_requests):
         self.qscend.raw = raw_data
+        self.qscend.requests = groomed_requests
         self.qscend.groom_activities()
 
         activity = self.qscend.activities[1]
+
         self.assertEqual(activity['request_id'], 2)
         self.assertEqual(activity['codeDesc'], 'Test')
         self.assertEqual(activity['route'], "['TestHarness', 'DPW']")
