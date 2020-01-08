@@ -96,14 +96,14 @@ class QScendClient():
             querystring
         )
 
-    def dump_date_data(self, time_window=1):
+    def dump_date_data(self, start, end):
         """
-        Get data dump for time window (default, last 1 day)
+        Get data dump for time window (date is m/d/yy)
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'dump')
         querystring = {
-            "start": self.format_date(time_window),
-            "end": self.format_date()
+            "start": start,
+            "end": end
         }
 
         return self.generate_response(

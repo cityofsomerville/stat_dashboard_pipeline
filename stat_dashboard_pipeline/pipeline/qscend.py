@@ -3,11 +3,14 @@ Grooming process for QScend Client
 
 Raw JSON API Dumps -> Socrata Storable JSON
 """
+import os
 import json
 import datetime
 
+import yaml
+
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
-from stat_dashboard_pipeline.config import Config
+from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 
 class QScendPipeline():
@@ -63,6 +66,11 @@ class QScendPipeline():
         """
         raw_requests = self.raw['request']
         categories = self.get_categories()
+
+        # Empty set
+        if not raw_requests:
+            return
+
         for request in raw_requests:
             # Convert to dict keyed on ID
             try:
@@ -110,6 +118,11 @@ class QScendPipeline():
         FK equivalent keyed on request ID
         """
         raw_activities = self.raw['activity']
+
+        # Empty set
+        if not raw_activities:
+            return
+
         for activity in raw_activities:
             request_id = activity['requestId']
             # Ditch `isPrivate` request IDs
@@ -238,3 +251,54 @@ class QScendPipeline():
     @staticmethod
     def get_categories():
         return Config().qscend_categories
+
+    def groom_for_migration(self):
+        """
+        Start Date: 6/1/15
+        """
+        import pprint
+
+        self.groom_depts()
+        # # If 403/Forbidden, the IP isn't whitelisted
+        if self.departments == {}:
+            return
+
+        self.groom_types()
+        self.get_type_ancestry()
+
+        start_year = 15
+        current_year = int(datetime.datetime.now().strftime('%y'))
+        for year in range(start_year, 16):
+            for month in range(1, 7):
+                """
+                6/1/15
+                """
+                start = '{month}/1/{year}'.format(month=str(month), year=str(year))
+                if month < 12:
+                    end = '{month}/1/{year}'.format(month=str(month+1), year=str(year))
+                else:
+                    end = '1/1/{year}'.format(year=str(year+1))
+                print(start, end)
+                try:
+                    self.raw = json.loads(
+                        self.qclient.dump_date_data(
+                            start=start,
+                            end=end
+                        )
+                    )
+                except TypeError:
+                    return
+                # Delete the unneeded keys
+                del self.raw['reqcustom'] # Empty
+                del self.raw['attachment'] # Unusable
+                del self.raw['submitter'] # Contains PII
+                pprint.pprint(self.raw)
+                self.groom_changes()
+                self.groom_activities()
+
+                # Send to Socrata
+
+if __name__ == '__main__':
+    qsc = QScendPipeline()
+    qsc.groom_migration()
+    # pprint.pprint(qsc.requests)
