@@ -10,7 +10,7 @@ SOCRATA_CONFIG = 'socrata.json'
 QSCEND_CONFIG = 'qscend_status_codes.json'
 GA_CREDENTIALS = 'ga_credentials.json'
 
-class Config():
+class Config(): # pylint: disable=R0903
     """
     Get variable configs from 'config' dir, including auth
     """

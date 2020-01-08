@@ -103,7 +103,7 @@ class SocrataClient():
             for subkey, subent in entry.items():
                 row[subkey] = subent
             final_report.append(row)
-        return (final_report)
+        return final_report
 
     def json_to_csv(self, filename='soctemp.csv'):
         """

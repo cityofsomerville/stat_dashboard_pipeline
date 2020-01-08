@@ -22,5 +22,4 @@ class QScendClientTest(unittest.TestCase):
         url = os.path.join('http://example.com', 'foo', 'bar')
         querystring = {}
         departments = self.qscend_client.generate_response(url, querystring)
-        print(departments)
         self.assertEqual(None, departments)

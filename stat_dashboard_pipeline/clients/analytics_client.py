@@ -2,10 +2,10 @@
 Google Analytics v4
 """
 
-from apiclient.discovery import build
+from apiclient.discovery import build # pylint: disable=E0401
 from oauth2client.service_account import ServiceAccountCredentials
 
-from stat_dashboard_pipeline.config import Config, ROOT_DIR
+from stat_dashboard_pipeline.config import Config
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 

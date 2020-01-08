@@ -5,7 +5,6 @@ Raw API JSON -> Socrata Storable JSON
 """
 import datetime
 from datetime import timedelta
-import pprint
 
 from stat_dashboard_pipeline.clients.analytics_client import GoogleAnalyticsClient
 
@@ -20,7 +19,6 @@ class AnalyticsPipeline():
     def run(self):
         self.raw = self.ga_client.run()
         self.groom()
-        return
 
     def groom(self):
         """
