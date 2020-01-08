@@ -2,9 +2,6 @@
 Google Analytics v4
 """
 
-import os
-import pprint
-
 from apiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -12,7 +9,9 @@ from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 
+
 class GoogleAnalyticsClient():
+
     def __init__(self):
         self.credentials = Config().credentials
         self.ga_credentials = Config().ga_credential_file
@@ -52,8 +51,3 @@ class GoogleAnalyticsClient():
                 }]
             }
         ).execute()
-
-if __name__ == '__main__':
-    gacx = GoogleAnalyticsClient()
-    response = gacx.run()
-    pprint.pprint(response)
