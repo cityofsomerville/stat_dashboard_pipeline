@@ -87,7 +87,6 @@ class SocrataClient():
     def upsert_qscend(self, groomed_data):
         data = []
         for row in groomed_data:
-            print(row)
             for key, entry in row.items():
                 # Deformat dates
                 if isinstance(entry, datetime.datetime):
