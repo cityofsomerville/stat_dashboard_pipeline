@@ -16,7 +16,6 @@ class GoogleAnalyticsClient():
         self.credentials = Config().credentials
         self.ga_credentials = Config().ga_credential_file
         self.client = None
-        # return
 
     def run(self):
         self.connect()
@@ -31,7 +30,8 @@ class GoogleAnalyticsClient():
         self.client = build(
             'analyticsreporting',
             'v4',
-            credentials=credentials
+            credentials=credentials,
+            cache_discovery=False
         )
 
     def query(self):
@@ -39,15 +39,17 @@ class GoogleAnalyticsClient():
             body={
                 'reportRequests': [{
                     'viewId': self.credentials['ga_view_id'],
-                    'dateRanges': [{'startDate': '2daysAgo', 'endDate': 'today'}],
-                    'dimensions': [{'name': 'ga:pagePath'}],
+                    'pageSize': 50,
+                    'samplingLevel': 'LARGE',
+                    'dateRanges': [{'startDate': 'yesterday', 'endDate': 'yesterday'}],
+                    'dimensions': [{'name': 'ga:pagePath'}, {'name': 'ga:pageTitle'}],
                     'metrics': [{
-                        'expression': 'ga:pageviews'
+                        'expression': 'ga:pageviews',
                     }],
                     "orderBys": [{
                         "fieldName": "ga:pageviews",
                         "sortOrder": "DESCENDING"
-                    }]
+                    }],
                 }]
             }
         ).execute()

@@ -66,12 +66,13 @@ class SocrataClient():
             data = self.upsert_qscend(
                 groomed_data=groomed_data
             )
+
         logging.info('[SOCRATA_CLIENT] Upserting data')
         logging.info(self.client.upsert(self.dataset_id, data))
 
     def upsert_citizenserve(self, groomed_data):
         data = []
-        for row in groomed_data[0]:
+        for row in groomed_data:
             if row['application_date'] > \
             datetime.datetime.now() - timedelta(days=self.citizenserve_update_window) and \
             self.citizenserve_update_window is not None:
@@ -85,27 +86,25 @@ class SocrataClient():
 
     def upsert_qscend(self, groomed_data):
         data = []
-        for row in groomed_data[0]:
+        for row in groomed_data:
+            print(row)
             for key, entry in row.items():
                 # Deformat dates
                 if isinstance(entry, datetime.datetime):
                     replacement = self.__deformat_date(entry)
                     row[key] = replacement
-                data.append(row)
+            data.append(row)
         return data
 
     def dict_transform(self):
-        fieldnames = set()
         final_report = []
         for key, entry in self.service_data.items():
-            fieldnames.add('id')
             # Add ID, go into dict
             row = {'id': key}
             for subkey, subent in entry.items():
                 row[subkey] = subent
-                fieldnames.add(subkey)
             final_report.append(row)
-        return (final_report, fieldnames)
+        return (final_report)
 
     def json_to_csv(self, filename='soctemp.csv'):
         """

@@ -9,6 +9,7 @@ import datetime
 
 from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
+from stat_dashboard_pipeline.pipeline.analytics import AnalyticsPipeline
 from stat_dashboard_pipeline.clients.socrata_client import SocrataClient
 from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
@@ -35,6 +36,7 @@ class Pipeline():
         self.citizenserve = CitizenServePipeline()
         self.time_window = kwargs.get('time_window', 1)
         self.qscend = None
+        self.analytics = AnalyticsPipeline()
         self.socrata_datasets = Config().socrata_datasets
 
     def run(self):
@@ -67,6 +69,12 @@ class Pipeline():
         logging.info("[PIPELINE] Storing Citizenserve data")
         self.store_citizenserve()
 
+        # GA
+        logging.info("[PIPELINE] Running Analytics pipeline")
+        self.analytics.run()
+        logging.info("[PIPELINE] Storing Analytics data")
+        self.store_analytics()
+
         # Cleanup Storage Dir
         logging.info("[PIPELINE] Cleaning temp storage")
         self.__cleanup()
@@ -86,6 +94,7 @@ class Pipeline():
         # QScend
         self.qscend.run()
         self.citizenserve.run()
+        self.analytics.run()
         self.dump_to_csv()
 
     def store_citizenserve(self):
@@ -122,6 +131,15 @@ class Pipeline():
         logging.info('[SOCRATA] Storing QSCend Types')
         socrata.run()
 
+    def store_analytics(self):
+        socrata = SocrataClient(
+            service_data=self.analytics.visits,
+            dataset_id=self.socrata_datasets['somerville_analytics']
+        )
+        logging.info('[SOCRATA] Storing Analytics')
+        socrata.run()
+
+
     def dump_to_csv(self):
         """
         This is an initial 'create CSV' method for migrating
@@ -142,6 +160,9 @@ class Pipeline():
         # Permits
         socrata.service_data = self.citizenserve.permits
         socrata.json_to_csv(filename='citizenserve_permits.csv')
+        # Analytics
+        socrata.service_data = self.analytics.visits
+        socrata.json_to_csv(filename='analytics.csv')
 
     @staticmethod
     def __prepare():
