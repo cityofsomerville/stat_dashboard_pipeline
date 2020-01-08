@@ -14,5 +14,8 @@ venv/
 # Repo
 tmp/*.txt
 tmp/*.csv
-config/auth.yaml
 stat_dashboard.log
+
+# Config
+config/auth.yaml
+config/ga_credentials.json
