@@ -5,21 +5,19 @@ import getopt
 from stat_dashboard_pipeline import Pipeline
 
 
-class StatPipeline():
+class StatPipeline(Pipeline):
     def __init__(self, **kwargs):
-        self.pipeline = Pipeline()
         self.time_window = kwargs.get('time_window', 1)
+        super().__init__(**kwargs)
 
-    def run(self):
-        if self.time_window:
-            self.pipeline.time_window = self.time_window
-        self.pipeline.run()
+    def run_pipeline(self):
+        super().run()
 
-    def initialize(self):
-        self.pipeline.initialize()
+    def initialize_pipeline(self):
+        super().initialize()
 
-    def migrate(self):
-        self.pipeline.migrate()
+    def migrate_pipeline(self):
+        super().migrate()
 
 
 def main():
@@ -52,18 +50,18 @@ def main():
 
     for arg in args:
         if arg[0] in ("-m", "--migrate"):
-            stat_pipeline.migrate()
+            stat_pipeline.migrate_pipeline()
             return
 
         if arg[0] in ("-i", "--init"):
-            stat_pipeline.migrate()
+            stat_pipeline.initialize_pipeline()
             return
 
         if arg[0] in ("-t", "--time"):
             stat_pipeline.time_window = vals[0]
 
     # Standard run
-    stat_pipeline.run()
+    stat_pipeline.run_pipeline()
     return
 
 

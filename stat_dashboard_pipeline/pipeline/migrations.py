@@ -28,7 +28,7 @@ class QScendMigrations(QScendPipeline, SocrataClient):
         self.migrate_by_date()
 
     def migrate_by_date(self):
-        for year in range(self.start_year, 16):
+        for year in range(self.start_year, self.current_year):
             for month in range(1, 13):
                 start = '{month}/1/{year}'.format(month=str(month), year=str(year))
                 if month < 12:
@@ -63,7 +63,7 @@ class QScendMigrations(QScendPipeline, SocrataClient):
         """
         try:
             self.raw = json.loads(
-                self.qclient.dump_date_data(
+                super().dump_date_data(
                     start=start,
                     end=end
                 )

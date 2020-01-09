@@ -13,8 +13,8 @@ from stat_dashboard_pipeline.pipeline.citizenserve import CitizenServePipeline
 from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
 from stat_dashboard_pipeline.pipeline.analytics import AnalyticsPipeline
 from stat_dashboard_pipeline.clients.socrata_client import SocrataClient
-from stat_dashboard_pipeline.config import Config, ROOT_DIR
 from stat_dashboard_pipeline.pipeline.migrations import QScendMigrations
+from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 NAME = "stat_pipeline"
 
@@ -29,14 +29,14 @@ logging.basicConfig(
 )
 
 
-class Pipeline:
+class Pipeline(Config):
 
     def __init__(self, **kwargs):
-        self.citizenserve = CitizenServePipeline()
         self.time_window = kwargs.get('time_window', 1)
         self.qscend = None
+        self.citizenserve = None
         self.analytics_pipeline = AnalyticsPipeline()
-        self.socrata_datasets = Config().socrata_datasets
+        super().__init__()
 
     def run(self):
         """
@@ -50,6 +50,9 @@ class Pipeline:
         self.qscend = QScendPipeline(
             time_window=self.time_window
         )
+        self.citizenserve = CitizenServePipeline(
+            update_window=CITIZENSERVE_UPDATE_WINDOW
+        )
         logging.info(
             "[PIPELINE] Init: %s",
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -60,19 +63,44 @@ class Pipeline:
         logging.info("[PIPELINE] Running QScend pipeline")
         self.qscend.run()
         logging.info("[PIPELINE] Storing QScend data")
-        self.store_qscend()
+        self.store(
+            endpoints=[
+                {
+                    'service_data': self.qscend.activities,
+                    'dataset_id': self.socrata_datasets['somerville_services_activities']
+                },
+                {
+                    'service_data': self.qscend.requests,
+                    'dataset_id': self.socrata_datasets['somerville_services']
+                },
+                {
+                    'service_data': self.qscend.types,
+                    'dataset_id': self.socrata_datasets['somerville_services_types']
+                }
+            ]
+        )
 
         # Citizenserve
         logging.info("[PIPELINE] Running Citizenserve pipeline")
         self.citizenserve.groom_permits()
         logging.info("[PIPELINE] Storing Citizenserve data")
-        self.store_citizenserve()
+        self.store(
+            endpoints=[{
+                'service_data': self.citizenserve.permits,
+                'dataset_id': self.socrata_datasets['somerville_permits']
+            }]
+        )
 
         # GA
         logging.info("[PIPELINE] Running Analytics pipeline")
         self.analytics_pipeline.groom_analytics()
         logging.info("[PIPELINE] Storing Analytics data")
-        self.store_analytics()
+        self.store(
+            endpoints=[{
+                'service_data': self.analytics_pipeline.analytics,
+                'dataset_id': self.socrata_datasets['somerville_analytics']
+            }]
+        )
 
         # Cleanup Storage Dir
         logging.info("[PIPELINE] Cleaning temp storage")
@@ -107,47 +135,15 @@ class Pipeline:
         qsc = QScendMigrations()
         qsc.migrate()
 
-    def store_citizenserve(self):
-        # Upsert Citizenserve Permit Data
-        socrata = SocrataClient(
-            service_data=self.citizenserve.permits,
-            dataset_id=self.socrata_datasets['somerville_permits'],
-            citizenserve_update_window=CITIZENSERVE_UPDATE_WINDOW
-        )
-        socrata.run()
-
-    def store_qscend(self):
-        # Activities
-        # No need to store an empty dataset
-        if self.qscend.activities == {}:
-            return
-
-        socrata = SocrataClient(
-            service_data=self.qscend.activities,
-            dataset_id=self.socrata_datasets['somerville_services_activities']
-        )
-        logging.info('[SOCRATA] Storing QSCend Activities')
-        socrata.run()
-
-        # Requests
-        socrata.service_data = self.qscend.requests
-        socrata.dataset_id = self.socrata_datasets['somerville_services']
-        logging.info('[SOCRATA] Storing QSCend Requests')
-        socrata.run()
-
-        # Types
-        socrata.service_data = self.qscend.types
-        socrata.dataset_id = self.socrata_datasets['somerville_services_types']
-        logging.info('[SOCRATA] Storing QSCend Types')
-        socrata.run()
-
-    def store_analytics(self):
-        socrata = SocrataClient(
-            service_data=self.analytics_pipeline.analytics,
-            dataset_id=self.socrata_datasets['somerville_analytics']
-        )
-        logging.info('[SOCRATA] Storing Analytics')
-        socrata.run()
+    def store(self, endpoints):
+        for dataset in endpoints:
+            if not dataset['service_data'] or dataset['service_data'] == {}:
+                return
+            socrata = SocrataClient(
+                service_data=dataset['service_data'],
+                dataset_id=dataset['dataset_id'],
+            )
+            socrata.upsert()
 
     def dump_to_csv(self):
         """
