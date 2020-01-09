@@ -30,6 +30,7 @@ logging.basicConfig(
 
 
 class Pipeline:
+
     def __init__(self, **kwargs):
         self.citizenserve = CitizenServePipeline()
         self.time_window = kwargs.get('time_window', 1)
@@ -38,34 +39,34 @@ class Pipeline:
         self.socrata_datasets = Config().socrata_datasets
 
     def run(self):
-        # """
-        # Nominal running of pipeline code
-        # Products:
-        #     self.qscend.requests
-        #     self.qscend.activities
-        #     self.qscend.types
-        #     self.citizenserve.permits
-        # """
-        # self.qscend = QScendPipeline(
-        #     time_window=self.time_window
-        # )
-        # logging.info(
-        #     "[PIPELINE] Init: %s",
-        #     datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        # )
-        # self.__prepare()
+        """
+        Nominal running of pipeline code
+        Products:
+            self.qscend.requests
+            self.qscend.activities
+            self.qscend.types
+            self.citizenserve.permits
+        """
+        self.qscend = QScendPipeline(
+            time_window=self.time_window
+        )
+        logging.info(
+            "[PIPELINE] Init: %s",
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        )
+        self.__prepare()
 
-        # # QScend
-        # logging.info("[PIPELINE] Running QScend pipeline")
-        # self.qscend.run()
-        # logging.info("[PIPELINE] Storing QScend data")
-        # self.store_qscend()
+        # QScend
+        logging.info("[PIPELINE] Running QScend pipeline")
+        self.qscend.run()
+        logging.info("[PIPELINE] Storing QScend data")
+        self.store_qscend()
 
-        # # Citizenserve
-        # logging.info("[PIPELINE] Running Citizenserve pipeline")
-        # self.citizenserve.run()
-        # logging.info("[PIPELINE] Storing Citizenserve data")
-        # self.store_citizenserve()
+        # Citizenserve
+        logging.info("[PIPELINE] Running Citizenserve pipeline")
+        self.citizenserve.groom_permits()
+        logging.info("[PIPELINE] Storing Citizenserve data")
+        self.store_citizenserve()
 
         # GA
         logging.info("[PIPELINE] Running Analytics pipeline")
@@ -91,7 +92,7 @@ class Pipeline:
         self.__prepare()
         # QScend
         self.qscend.run()
-        self.citizenserve.run()
+        self.citizenserve.groom_permits()
         self.analytics_pipeline.groom_analytics()
         self.dump_to_csv()
 
@@ -147,7 +148,6 @@ class Pipeline:
         )
         logging.info('[SOCRATA] Storing Analytics')
         socrata.run()
-
 
     def dump_to_csv(self):
         """

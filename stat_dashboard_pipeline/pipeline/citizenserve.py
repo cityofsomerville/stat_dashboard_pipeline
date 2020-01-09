@@ -13,26 +13,22 @@ from stat_dashboard_pipeline.clients.citizenserve_client import CitizenServeClie
 from stat_dashboard_pipeline.config import Config
 
 
-class CitizenServePipeline():
+class CitizenServePipeline(CitizenServeClient):
 
     def __init__(self):
-        self.cs_client = CitizenServeClient()
         self.permits = {}
         self.categories = self.get_categories()
+        super().__init__()
 
-    def run(self):
-        """
-        Semi-temp master run funct
-        """
-        temp_file = self.get_data()
-        if temp_file is not None:
-            self.groom_data(temp_file)
-
-    def groom_data(self, temp_file):
+    def groom_permits(self):
         """
         The SFTP dump appears to be 'everything since 2015'
         So we'll overwrite and create a fresh JSON for upload
         """
+        temp_file = self.get_data()
+        if not temp_file:
+            return
+
         with open(temp_file, 'r', encoding="ISO-8859-1") as data:
             datareader = csv.DictReader(data, delimiter='\t')
             for row in datareader:
@@ -58,16 +54,16 @@ class CitizenServePipeline():
 
     def get_data(self):
         try:
-            self.cs_client.download()
+            super().download()
         except paramiko.ssh_exception.AuthenticationException:
             logging.error('Credentials failure, Citizenserve SFTP')
-            self.cs_client.connection.close()
+            self.connection.close()
             return None
         except paramiko.ssh_exception.SSHException:
             logging.error('Credentials failure, Citizenserve SFTP')
-            self.cs_client.connection.close()
+            self.connection.close()
             return None
-        return self.cs_client.local_path()
+        return super().local_path()
 
     @staticmethod
     def format_dates(date):

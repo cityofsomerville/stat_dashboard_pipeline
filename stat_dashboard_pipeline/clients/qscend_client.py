@@ -8,10 +8,10 @@ import requests
 from stat_dashboard_pipeline.config import Config
 
 
-class QScendClient():
+class QScendClient(Config):
 
     def __init__(self):
-        self.credentials = Config().credentials
+        super().__init__()
 
     def generate_response(self, url, querystring):
         headers = {
@@ -36,12 +36,6 @@ class QScendClient():
             logging.error(response.text)
             return None
         return response.text
-
-    @staticmethod
-    def format_date(time_window=0):
-        return requests.utils.quote(
-            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
-        )
 
     def get_by_date_range(self, ticket_id=None, time_window=7):
         """
@@ -120,4 +114,10 @@ class QScendClient():
         return self.generate_response(
             url,
             querystring
+        )
+
+    @staticmethod
+    def format_date(time_window=0):
+        return requests.utils.quote(
+            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
         )
