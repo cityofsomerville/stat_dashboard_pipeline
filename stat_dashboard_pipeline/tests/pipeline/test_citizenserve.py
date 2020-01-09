@@ -108,8 +108,6 @@ class CitizenServePipelineTest(unittest.TestCase):
     def test_determine_categories(self, category_data, test_cats):
         self.citizenserve.categories = category_data
         for category in test_cats:
-            print(category)
-        # for key, entry in category_data:
             return_cat = self.citizenserve.determine_categories(
                 permit_type=category
             )

@@ -58,10 +58,8 @@ class SocrataClientTest(unittest.TestCase):
                 'test_3': 'three_three'
             }
         ]
-        fields_output = {'id', 'test_2', 'test_3', 'test_1'}
-        final_report, fieldnames = self.socrata_client.dict_transform()
+        final_report = self.socrata_client.dict_transform()
         self.assertEqual(final_report, output)
-        self.assertEqual(fieldnames, fields_output)
 
     def test_json_to_csv(self):
         self.socrata_client.json_to_csv(filename='test.csv')

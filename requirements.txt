@@ -5,3 +5,5 @@ paramiko == 2.6.0
 pyyaml == 5.1.2
 freezegun == 0.3.12
 ddt == 1.2.2
+google-api-python-client == 1.7.11
+oauth2client == 4.1.3
