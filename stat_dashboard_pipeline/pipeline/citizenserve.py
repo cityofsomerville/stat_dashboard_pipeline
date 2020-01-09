@@ -6,6 +6,7 @@ Raw CSV SFTP Dumps -> Socrata Storable JSON
 import csv
 import datetime
 import logging
+from datetime import timedelta
 
 import paramiko
 
@@ -15,9 +16,10 @@ from stat_dashboard_pipeline.config import Config
 
 class CitizenServePipeline(CitizenServeClient):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.permits = {}
         self.categories = self.get_categories()
+        self.update_window = kwargs.get('update_window', None)
         super().__init__()
 
     def groom_permits(self):
@@ -34,15 +36,24 @@ class CitizenServePipeline(CitizenServeClient):
             for row in datareader:
                 permit_id = row['Permit#']
                 permit_type = self.determine_categories(row['PermitType'])
-                self.permits[permit_id] = {
-                    'type': permit_type,
-                    'issue_date': self.format_dates(row['IssueDate']),
-                    'application_date': self.format_dates(row['ApplicationDate']),
-                    'status': row['Status'],
-                    'amount': row['PermitAmount'],
-                    'latitude': row['Latitude'],
-                    'longitude': row['Longitude']
-                }
+                # Determine Data to Groom
+                if self.determine_update_window(date=row['IssueDate']):
+                    self.permits[permit_id] = {
+                        'type': permit_type,
+                        'issue_date': self.format_dates(row['IssueDate']),
+                        'application_date': self.format_dates(row['ApplicationDate']),
+                        'status': row['Status'],
+                        'amount': row['PermitAmount'],
+                        'latitude': row['Latitude'],
+                        'longitude': row['Longitude']
+                    }
+
+    def determine_update_window(self, date):
+        if not self.update_window:
+            return True
+        if self.format_dates(date) > datetime.datetime.now() - timedelta(days=self.update_window):
+            return True
+        return False
 
     def determine_categories(self, permit_type):
         try:
