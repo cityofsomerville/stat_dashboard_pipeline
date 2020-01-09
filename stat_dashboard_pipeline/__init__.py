@@ -124,27 +124,6 @@ class Pipeline(Config):
         self.analytics_pipeline.groom_analytics()
         self.dump_to_csv()
 
-    def migrate(self):
-        """
-        Migrate historical QScend Data
-        """
-        logging.info(
-            "[PIPELINE] Migrate: %s",
-            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        )
-        qsc = QScendMigrations()
-        qsc.migrate()
-
-    def store(self, endpoints):
-        for dataset in endpoints:
-            if not dataset['service_data'] or dataset['service_data'] == {}:
-                return
-            socrata = SocrataClient(
-                service_data=dataset['service_data'],
-                dataset_id=dataset['dataset_id'],
-            )
-            socrata.upsert()
-
     def dump_to_csv(self):
         """
         This is an initial 'create CSV' method for initiailizing
@@ -168,6 +147,29 @@ class Pipeline(Config):
         # Analytics
         socrata.service_data = self.analytics_pipeline.analytics
         socrata.json_to_csv(filename='analytics.csv')
+
+    @staticmethod
+    def migrate():
+        """
+        Migrate historical QScend Data
+        """
+        logging.info(
+            "[PIPELINE] Migrate: %s",
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        )
+        qsc = QScendMigrations()
+        qsc.migrate()
+
+    @staticmethod
+    def store(endpoints):
+        for dataset in endpoints:
+            if not dataset['service_data'] or dataset['service_data'] == {}:
+                return
+            socrata = SocrataClient(
+                service_data=dataset['service_data'],
+                dataset_id=dataset['dataset_id'],
+            )
+            socrata.upsert()
 
     @staticmethod
     def __prepare():

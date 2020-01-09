@@ -10,9 +10,6 @@ from stat_dashboard_pipeline.config import Config
 
 class QScendClient(Config):
 
-    def __init__(self):
-        super().__init__()
-
     def generate_response(self, url, querystring):
         headers = {
             'User-Agent': "SomerStatDash/0.0.1",

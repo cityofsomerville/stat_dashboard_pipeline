@@ -12,7 +12,7 @@ class CitizenServeClientTest(unittest.TestCase):
 
     def setUp(self):
         self.qscend = QScendPipeline()
-        self.qscend.qclient.credentials = {
+        self.qscend.credentials = {
             'qscend_url': 'https://example.com',
             'qscend_key': '',
         }

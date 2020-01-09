@@ -14,7 +14,7 @@ class CitizenServePipelineTest(unittest.TestCase):
 
     def setUp(self):
         self.citizenserve = CitizenServePipeline()
-        self.citizenserve.cs_client.credentials = {
+        self.citizenserve.credentials = {
             'sftp_remote_dir': '',
             'sftp_server': '',
             'sftp_port': 0
@@ -51,9 +51,9 @@ class CitizenServePipelineTest(unittest.TestCase):
         'Longitude': 0
     }])
     @ddt.unpack
-    def test_groom_data(self, permit_data):
+    def test_groom_permits(self, permit_data):
         self._generate_test_file(test_data=permit_data)
-        self.citizenserve.groom_data(temp_file=self.temp_file)
+        self.citizenserve.groom_permits(temp_file=self.temp_file)
         try:
             permit_id = permit_data['Permit#']
             permit_dict = self.citizenserve.permits[permit_id]

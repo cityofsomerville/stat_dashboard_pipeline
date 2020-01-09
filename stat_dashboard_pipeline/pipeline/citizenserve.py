@@ -5,8 +5,8 @@ Raw CSV SFTP Dumps -> Socrata Storable JSON
 """
 import csv
 import datetime
-import logging
 from datetime import timedelta
+import logging
 
 import paramiko
 
@@ -22,14 +22,15 @@ class CitizenServePipeline(CitizenServeClient):
         self.update_window = kwargs.get('update_window', None)
         super().__init__()
 
-    def groom_permits(self):
+    def groom_permits(self, temp_file=None):
         """
         The SFTP dump appears to be 'everything since 2015'
         So we'll overwrite and create a fresh JSON for upload
         """
-        temp_file = self.get_data()
         if not temp_file:
-            return
+            temp_file = self.get_data()
+            if not temp_file:
+                return
 
         with open(temp_file, 'r', encoding="ISO-8859-1") as data:
             datareader = csv.DictReader(data, delimiter='\t')

@@ -13,7 +13,6 @@ HOWEVER: The API will 'upsert' a row if the ID (set in the UI) is identifiable
 """
 import os
 import datetime
-from datetime import timedelta
 import csv
 import logging
 
@@ -60,7 +59,7 @@ class SocrataClient(Config):
 
         logging.info('[SOCRATA_CLIENT] Upserting data')
         logging.info(self.client.upsert(self.dataset_id, data))
-    
+
     def send_data(self, groomed_data):
         data = []
         for row in groomed_data:

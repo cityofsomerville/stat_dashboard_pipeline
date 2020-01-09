@@ -79,4 +79,3 @@ class CitizenServeClient(Config):
             return False
         else:
             return True
-
