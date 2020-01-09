@@ -31,7 +31,7 @@ class SocrataClient(Config):
         self.service_data = kwargs.get('service_data', None)
         self.dataset_id = kwargs.get('dataset_id', None)
         self.citizenserve_update_window = kwargs.get('citizenserve_update_window', None)
-        super(SocrataClient, self).__init__(**kwargs)
+        super(SocrataClient, self).__init__()
 
     def run(self):
         self.upsert()

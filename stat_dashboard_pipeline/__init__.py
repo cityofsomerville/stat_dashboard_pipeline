@@ -24,7 +24,7 @@ INIT_UPDATE_WINDOW = 30
 LOGGING_FILE = 'stat_pipeline.log'
 LOG_LEVEL = logging.DEBUG
 logging.basicConfig(
-    filename=os.path.join(os.path.dirname(ROOT_DIR), LOGGING_FILE),
+    # filename=os.path.join(os.path.dirname(ROOT_DIR), LOGGING_FILE),
     level=LOG_LEVEL
 )
 
@@ -34,42 +34,42 @@ class Pipeline:
         self.citizenserve = CitizenServePipeline()
         self.time_window = kwargs.get('time_window', 1)
         self.qscend = None
-        self.analytics = AnalyticsPipeline()
+        self.analytics_pipeline = AnalyticsPipeline()
         self.socrata_datasets = Config().socrata_datasets
 
     def run(self):
-        """
-        Nominal running of pipeline code
-        Products:
-            self.qscend.requests
-            self.qscend.activities
-            self.qscend.types
-            self.citizenserve.permits
-        """
-        self.qscend = QScendPipeline(
-            time_window=self.time_window
-        )
-        logging.info(
-            "[PIPELINE] Init: %s",
-            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        )
-        self.__prepare()
+        # """
+        # Nominal running of pipeline code
+        # Products:
+        #     self.qscend.requests
+        #     self.qscend.activities
+        #     self.qscend.types
+        #     self.citizenserve.permits
+        # """
+        # self.qscend = QScendPipeline(
+        #     time_window=self.time_window
+        # )
+        # logging.info(
+        #     "[PIPELINE] Init: %s",
+        #     datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        # )
+        # self.__prepare()
 
-        # QScend
-        logging.info("[PIPELINE] Running QScend pipeline")
-        self.qscend.run()
-        logging.info("[PIPELINE] Storing QScend data")
-        self.store_qscend()
+        # # QScend
+        # logging.info("[PIPELINE] Running QScend pipeline")
+        # self.qscend.run()
+        # logging.info("[PIPELINE] Storing QScend data")
+        # self.store_qscend()
 
-        # Citizenserve
-        logging.info("[PIPELINE] Running Citizenserve pipeline")
-        self.citizenserve.run()
-        logging.info("[PIPELINE] Storing Citizenserve data")
-        self.store_citizenserve()
+        # # Citizenserve
+        # logging.info("[PIPELINE] Running Citizenserve pipeline")
+        # self.citizenserve.run()
+        # logging.info("[PIPELINE] Storing Citizenserve data")
+        # self.store_citizenserve()
 
         # GA
         logging.info("[PIPELINE] Running Analytics pipeline")
-        self.analytics.run()
+        self.analytics_pipeline.groom_analytics()
         logging.info("[PIPELINE] Storing Analytics data")
         self.store_analytics()
 
@@ -92,7 +92,7 @@ class Pipeline:
         # QScend
         self.qscend.run()
         self.citizenserve.run()
-        self.analytics.run()
+        self.analytics_pipeline.groom_analytics()
         self.dump_to_csv()
 
     def migrate(self):
@@ -142,7 +142,7 @@ class Pipeline:
 
     def store_analytics(self):
         socrata = SocrataClient(
-            service_data=self.analytics.visits,
+            service_data=self.analytics_pipeline.analytics,
             dataset_id=self.socrata_datasets['somerville_analytics']
         )
         logging.info('[SOCRATA] Storing Analytics')
@@ -170,7 +170,7 @@ class Pipeline:
         socrata.service_data = self.citizenserve.permits
         socrata.json_to_csv(filename='citizenserve_permits.csv')
         # Analytics
-        socrata.service_data = self.analytics.visits
+        socrata.service_data = self.analytics_pipeline.analytics
         socrata.json_to_csv(filename='analytics.csv')
 
     @staticmethod

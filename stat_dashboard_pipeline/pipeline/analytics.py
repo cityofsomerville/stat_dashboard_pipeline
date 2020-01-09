@@ -9,22 +9,23 @@ from datetime import timedelta
 from stat_dashboard_pipeline.clients.analytics_client import GoogleAnalyticsClient
 
 
-class AnalyticsPipeline():
+class AnalyticsPipeline(GoogleAnalyticsClient):
 
     def __init__(self):
-        self.ga_client = GoogleAnalyticsClient()
-        self.raw = None
-        self.visits = {}
+        self.analytics = {}
+        super().__init__()
 
-    def run(self):
-        self.raw = self.ga_client.run()
-        self.groom()
+    # def run(self):
+    #     self.raw = self.ga_client.query()
+    #     self.groom()
 
-    def groom(self):
+    def groom_analytics(self):
         """
         Make a JSON dump for Socrata
         """
-        data = self.raw['reports'][0]['data']['rows']
+        raw_data = super().query()
+        # Groom data
+        data = raw_data['reports'][0]['data']['rows']
         date = (datetime.datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
         # The query is sorted, just take the top 20
         for visit in data[0:20]:
@@ -36,7 +37,7 @@ class AnalyticsPipeline():
                 'pageviews': visit['metrics'][0]['values'][0],
                 'title': visit['dimensions'][1].replace('| City of Somerville', '').strip(),
             }
-            self.visits[dateurl] = final_dict
+            self.analytics[dateurl] = final_dict
 
     @staticmethod
     def format_dates(date):
