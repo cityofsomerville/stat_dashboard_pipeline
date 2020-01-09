@@ -30,13 +30,17 @@ Copy the `config/sample_auth.yaml` file and rename it to `auth.yaml`. Put the cr
 stat_pipeline
 ```
 
-## Migrate
+## Initialize
 **NOTE:** Does not store in Socrata
 To initialize the data for the datasets: Simple one-off queries that dump to CSV files for upload to the Somerville Socrata instance via the UI. 
 ```
-stat_pipeline -m 
-# OR
-stat_pipeline --migrate
+stat_pipeline -i
+```
+
+## Migrate
+Run a complete historical migration of QScend activities (takes some time)
+```
+stat_pipeline -m
 ```
 
 ## Run Unit Tests

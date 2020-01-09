@@ -1,6 +1,8 @@
 """
 SomerStat Daily Data Dashboard
 Pipeline
+
+Parent pipeline class, with methods favorable to the enduser CLI
 """
 import os
 import shutil
@@ -12,12 +14,12 @@ from stat_dashboard_pipeline.pipeline.qscend import QScendPipeline
 from stat_dashboard_pipeline.pipeline.analytics import AnalyticsPipeline
 from stat_dashboard_pipeline.clients.socrata_client import SocrataClient
 from stat_dashboard_pipeline.config import Config, ROOT_DIR
+from stat_dashboard_pipeline.pipeline.migrations import QScendMigrations
 
-
-NAME = "stat_dashboard_pipeline"
+NAME = "stat_pipeline"
 
 CITIZENSERVE_UPDATE_WINDOW = 30
-MIGRATION_UPDATE_WINDOW = 30
+INIT_UPDATE_WINDOW = 30
 
 LOGGING_FILE = 'stat_pipeline.log'
 LOG_LEVEL = logging.DEBUG
@@ -27,11 +29,7 @@ logging.basicConfig(
 )
 
 
-class Pipeline():
-    """
-    Parent pipeline class, with methods favorable to the enduser CLI
-
-    """
+class Pipeline:
     def __init__(self, **kwargs):
         self.citizenserve = CitizenServePipeline()
         self.time_window = kwargs.get('time_window', 1)
@@ -79,16 +77,16 @@ class Pipeline():
         logging.info("[PIPELINE] Cleaning temp storage")
         self.__cleanup()
 
-    def migrate(self):
+    def initialize(self):
         """
         Citizenserve always dumps all data, so no migration needed
         """
         logging.info(
-            "[PIPELINE] Migrate: %s",
+            "[PIPELINE] Initialize CSV files: %s",
             datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         )
         self.qscend = QScendPipeline(
-            time_window=MIGRATION_UPDATE_WINDOW
+            time_window=INIT_UPDATE_WINDOW
         )
         self.__prepare()
         # QScend
@@ -96,6 +94,17 @@ class Pipeline():
         self.citizenserve.run()
         self.analytics.run()
         self.dump_to_csv()
+
+    def migrate(self):
+        """
+        Migrate historical QScend Data
+        """
+        logging.info(
+            "[PIPELINE] Migrate: %s",
+            datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        )
+        qsc = QScendMigrations()
+        qsc.migrate()
 
     def store_citizenserve(self):
         # Upsert Citizenserve Permit Data
@@ -142,7 +151,7 @@ class Pipeline():
 
     def dump_to_csv(self):
         """
-        This is an initial 'create CSV' method for migrating
+        This is an initial 'create CSV' method for initiailizing
         large datasets and instantiating them in the Socrata UI
         """
         # Activites

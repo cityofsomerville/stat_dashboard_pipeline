@@ -15,24 +15,29 @@ class StatPipeline():
             self.pipeline.time_window = self.time_window
         self.pipeline.run()
 
+    def initialize(self):
+        self.pipeline.initialize()
+
     def migrate(self):
         self.pipeline.migrate()
 
 
 def main():
     """
-
     Run:
     stat_pipeline
 
     Command Line options:
-    --migrate / -m
-        Run a full migration of historical data to temporary
+    --init / -i
+        Run a short migration of historical data to temporary
         CSV files for uploading to Socrata via UI
 
+    --migrate / -m
+        Run complete historical migration of QScend Requests/Activities
+
     """
-    unix_options = ":mt"
-    gnu_options = ["migrate", "time"]
+    unix_options = ":mit"
+    gnu_options = ["migrate", "init", "time"]
     cmd_args = sys.argv
     arguments = cmd_args[1:]
 
@@ -44,15 +49,19 @@ def main():
         sys.exit(2)
 
     stat_pipeline = StatPipeline()
-    
+
     for arg in args:
         if arg[0] in ("-m", "--migrate"):
             stat_pipeline.migrate()
             return
 
+        if arg[0] in ("-i", "--init"):
+            stat_pipeline.migrate()
+            return
+
         if arg[0] in ("-t", "--time"):
             stat_pipeline.time_window = vals[0]
-            
+
     # Standard run
     stat_pipeline.run()
     return

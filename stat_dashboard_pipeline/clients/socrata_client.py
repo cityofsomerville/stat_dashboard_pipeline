@@ -23,14 +23,15 @@ from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 SOCRATA_MASTER_TIMEOUT = 600
 
-class SocrataClient():
+class SocrataClient(Config):
 
     def __init__(self, **kwargs):
-        self.credentials = Config().credentials
+        # self.credentials = Config().credentials
         self.client = None
         self.service_data = kwargs.get('service_data', None)
         self.dataset_id = kwargs.get('dataset_id', None)
         self.citizenserve_update_window = kwargs.get('citizenserve_update_window', None)
+        super(SocrataClient, self).__init__(**kwargs)
 
     def run(self):
         self.upsert()
