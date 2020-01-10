@@ -7,13 +7,11 @@ import json
 import datetime
 
 from stat_dashboard_pipeline.clients.qscend_client import QScendClient
-from stat_dashboard_pipeline.config import Config
 
 
-class QScendPipeline():
+class QScendPipeline(QScendClient):
 
     def __init__(self, **kwargs):
-        self.qclient = QScendClient()
         self.raw = None
         self.time_window = kwargs.get('time_window', 1)
         self.departments = {}
@@ -21,7 +19,7 @@ class QScendPipeline():
         self.requests = {}
         self.activities = {}
         self.types = {}
-
+        super(QScendPipeline, self).__init__()
 
     def run(self):
         """
@@ -36,18 +34,18 @@ class QScendPipeline():
         self.get_type_ancestry()
 
         # Get Changes
-        self.get_changes()
+        self.get_changes_data()
         self.groom_changes()
         self.groom_activities()
         self.groom_published_types()
 
-    def get_changes(self):
+    def get_changes_data(self):
         """
         Call and clean response from QScendClient class
         """
         try:
             self.raw = json.loads(
-                self.qclient.get_changes(time_window=self.time_window)
+                super().get_changes(time_window=self.time_window)
             )
         except TypeError:
             return
@@ -61,8 +59,14 @@ class QScendPipeline():
         Get the data from the QScendAPI Client, munge into a usable dict
         Create usable FE dict
         """
+
         raw_requests = self.raw['request']
         categories = self.get_categories()
+
+        # Empty set
+        if not raw_requests:
+            return
+
         for request in raw_requests:
             # Convert to dict keyed on ID
             try:
@@ -100,16 +104,17 @@ class QScendPipeline():
                 'category': category
             }
 
-    @staticmethod
-    def get_date(date):
-        return datetime.datetime.strptime(date, '%m/%d/%Y %I:%M %p')
-
     def groom_activities(self):
         """
         Create a subtable of activites with a
         FK equivalent keyed on request ID
         """
         raw_activities = self.raw['activity']
+
+        # Empty set
+        if not raw_activities:
+            return
+
         for activity in raw_activities:
             request_id = activity['requestId']
             # Ditch `isPrivate` request IDs
@@ -150,7 +155,7 @@ class QScendPipeline():
 
     def groom_depts(self):
         try:
-            raw_depts = json.loads(self.qclient.get_departments())
+            raw_depts = json.loads(super().get_departments())
         except TypeError:
             return
         for dept in raw_depts:
@@ -182,7 +187,7 @@ class QScendPipeline():
         Call API, get raw types, munge into dict
         """
         try:
-            raw_types = json.loads(self.qclient.get_types())
+            raw_types = json.loads(super().get_types())
         except TypeError:
             return
         for q_type in raw_types:
@@ -216,7 +221,6 @@ class QScendPipeline():
             except KeyError:
                 self.types[key]['ancestor'] = None
 
-
     def _get_ancestor(self, q_type, key):
         """
         Recurse to find ancestor node
@@ -231,10 +235,14 @@ class QScendPipeline():
             key=parent_id
         )
 
-    @staticmethod
-    def get_statuses(status_no):
-        return Config().qscend_statuses[str(status_no)]
+    def get_statuses(self, status_no):
+        # Inhereted from Client -> Config
+        return self.qscend_statuses[str(status_no)]
+
+    def get_categories(self):
+        # Inhereted from Client -> Config
+        return self.qscend_categories
 
     @staticmethod
-    def get_categories():
-        return Config().qscend_categories
+    def get_date(date):
+        return datetime.datetime.strptime(date, '%m/%d/%Y %I:%M %p')

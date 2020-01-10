@@ -13,7 +13,6 @@ HOWEVER: The API will 'upsert' a row if the ID (set in the UI) is identifiable
 """
 import os
 import datetime
-from datetime import timedelta
 import csv
 import logging
 
@@ -23,17 +22,13 @@ from stat_dashboard_pipeline.config import Config, ROOT_DIR
 
 SOCRATA_MASTER_TIMEOUT = 600
 
-class SocrataClient():
+class SocrataClient(Config):
 
     def __init__(self, **kwargs):
-        self.credentials = Config().credentials
         self.client = None
         self.service_data = kwargs.get('service_data', None)
         self.dataset_id = kwargs.get('dataset_id', None)
-        self.citizenserve_update_window = kwargs.get('citizenserve_update_window', None)
-
-    def run(self):
-        self.upsert()
+        super(SocrataClient, self).__init__()
 
     def _connect(self):
         self.client = Socrata(
@@ -58,37 +53,18 @@ class SocrataClient():
         if self.client is None:
             self._connect()
         groomed_data = self.dict_transform()
-        if self.citizenserve_update_window is not None:
-            data = self.upsert_citizenserve(
-                groomed_data=groomed_data
-            )
-        else:
-            data = self.upsert_qscend(
-                groomed_data=groomed_data
-            )
+        data = self.send_data(
+            groomed_data=groomed_data
+        )
 
         logging.info('[SOCRATA_CLIENT] Upserting data')
         logging.info(self.client.upsert(self.dataset_id, data))
 
-    def upsert_citizenserve(self, groomed_data):
-        data = []
-        for row in groomed_data:
-            if row['application_date'] > \
-            datetime.datetime.now() - timedelta(days=self.citizenserve_update_window) and \
-            self.citizenserve_update_window is not None:
-                for key, entry in row.items():
-                    # Deformat dates
-                    if isinstance(entry, datetime.datetime):
-                        replacement = self.__deformat_date(entry)
-                        row[key] = replacement
-                data.append(row)
-        return data
-
-    def upsert_qscend(self, groomed_data):
+    def send_data(self, groomed_data):
         data = []
         for row in groomed_data:
             for key, entry in row.items():
-                # Deformat dates
+                # Deformat and replace dates
                 if isinstance(entry, datetime.datetime):
                     replacement = self.__deformat_date(entry)
                     row[key] = replacement

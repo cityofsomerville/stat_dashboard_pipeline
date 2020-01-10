@@ -10,24 +10,19 @@ from stat_dashboard_pipeline.config import Config
 SCOPES = ['https://www.googleapis.com/auth/analytics.readonly']
 
 
-class GoogleAnalyticsClient():
+class GoogleAnalyticsClient(Config):
 
     def __init__(self):
-        self.credentials = Config().credentials
-        self.ga_credentials = Config().ga_credential_file
-        self.client = None
-
-    def run(self):
-        self.connect()
-        return self.query()
+        self.ga_client = None
+        super().__init__()
 
     def connect(self):
         credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            self.ga_credentials,
+            self.ga_credential_file,
             SCOPES
         )
         # Build the service object
-        self.client = build(
+        self.ga_client = build(
             'analyticsreporting',
             'v4',
             credentials=credentials,
@@ -35,7 +30,9 @@ class GoogleAnalyticsClient():
         )
 
     def query(self):
-        return self.client.reports().batchGet(
+        if not self.ga_client:
+            self.connect()
+        return self.ga_client.reports().batchGet(
             body={
                 'reportRequests': [{
                     'viewId': self.credentials['ga_view_id'],

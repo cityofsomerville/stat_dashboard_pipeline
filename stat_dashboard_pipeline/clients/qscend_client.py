@@ -8,10 +8,7 @@ import requests
 from stat_dashboard_pipeline.config import Config
 
 
-class QScendClient():
-
-    def __init__(self):
-        self.credentials = Config().credentials
+class QScendClient(Config):
 
     def generate_response(self, url, querystring):
         headers = {
@@ -36,12 +33,6 @@ class QScendClient():
             logging.error(response.text)
             return None
         return response.text
-
-    @staticmethod
-    def format_date(time_window=0):
-        return requests.utils.quote(
-            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
-        )
 
     def get_by_date_range(self, ticket_id=None, time_window=7):
         """
@@ -96,14 +87,14 @@ class QScendClient():
             querystring
         )
 
-    def dump_date_data(self, time_window=1):
+    def dump_date_data(self, start, end):
         """
-        Get data dump for time window (default, last 1 day)
+        Get data dump for time window (date is m/d/yy)
         """
         url = os.path.join(self.credentials['qscend_url'], 'requests', 'dump')
         querystring = {
-            "start": self.format_date(time_window),
-            "end": self.format_date()
+            "start": start,
+            "end": end
         }
 
         return self.generate_response(
@@ -120,4 +111,10 @@ class QScendClient():
         return self.generate_response(
             url,
             querystring
+        )
+
+    @staticmethod
+    def format_date(time_window=0):
+        return requests.utils.quote(
+            (datetime.datetime.now() - timedelta(days=int(time_window))).strftime("%m/%d/%Y")
         )
