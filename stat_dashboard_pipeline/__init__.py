@@ -24,7 +24,7 @@ INIT_UPDATE_WINDOW = 30
 LOGGING_FILE = 'stat_pipeline.log'
 LOG_LEVEL = logging.DEBUG
 logging.basicConfig(
-    # filename=os.path.join(os.path.dirname(ROOT_DIR), LOGGING_FILE),
+    filename=os.path.join(os.path.dirname(ROOT_DIR), LOGGING_FILE),
     level=LOG_LEVEL
 )
 
@@ -117,36 +117,49 @@ class Pipeline(Config):
         self.qscend = QScendPipeline(
             time_window=INIT_UPDATE_WINDOW
         )
+        self.citizenserve = CitizenServePipeline()
+
         self.__prepare()
+
         # QScend
         self.qscend.run()
-        self.citizenserve.groom_permits()
-        self.analytics_pipeline.groom_analytics()
-        self.dump_to_csv()
+        self.dump_to_csv(
+            service_data=self.qscend.activities,
+            filename='qscend_activities.csv'
+        )
+        self.dump_to_csv(
+            service_data=self.qscend.requests,
+            filename='qscend_requests.csv'
+        )
+        self.dump_to_csv(
+            service_data=self.qscend.activities,
+            filename='qscend_types.csv'
+        )
 
-    def dump_to_csv(self):
+        # Citizenserve
+        self.citizenserve.groom_permits()
+        self.dump_to_csv(
+            service_data=self.citizenserve.permits,
+            filename='citizenserve_permits.csv'
+        )
+
+        # Analytics
+        self.analytics_pipeline.groom_analytics()
+        self.dump_to_csv(
+            service_data=self.analytics_pipeline.analytics,
+            filename='analytics.csv'
+        )
+
+    @staticmethod
+    def dump_to_csv(service_data, filename):
         """
         This is an initial 'create CSV' method for initiailizing
         large datasets and instantiating them in the Socrata UI
         """
-        # Activites
         socrata = SocrataClient(
-            service_data=self.qscend.activities,
-            dataset_id=self.socrata_datasets['somerville_services']
+            service_data=service_data
         )
-        socrata.json_to_csv(filename='qscend_activities.csv')
-        # Requests
-        socrata.service_data = self.qscend.requests
-        socrata.json_to_csv(filename='qscend_requests.csv')
-        # Types
-        socrata.service_data = self.qscend.types
-        socrata.json_to_csv(filename='qscend_types.csv')
-        # Permits
-        socrata.service_data = self.citizenserve.permits
-        socrata.json_to_csv(filename='citizenserve_permits.csv')
-        # Analytics
-        socrata.service_data = self.analytics_pipeline.analytics
-        socrata.json_to_csv(filename='analytics.csv')
+        socrata.json_to_csv(filename=filename)
 
     @staticmethod
     def migrate():
