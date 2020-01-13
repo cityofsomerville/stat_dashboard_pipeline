@@ -46,7 +46,9 @@ class CitizenServePipeline(CitizenServeClient):
                         'status': row['Status'],
                         'amount': row['PermitAmount'],
                         'latitude': row['Latitude'],
-                        'longitude': row['Longitude']
+                        'longitude': row['Longitude'],
+                        'address': self.groom_address(row['Address']),
+                        'work': self.groom_work_field(row['ProjectName'])
                     }
 
     def determine_update_window(self, date):
@@ -89,3 +91,15 @@ class CitizenServePipeline(CitizenServeClient):
         """
         config = Config()
         return config.permit_categories
+
+    @staticmethod
+    def groom_work_field(raw_work):
+        return ' '.join(
+            raw_work.split()
+        ).replace(',', '').capitalize().strip()
+
+    @staticmethod
+    def groom_address(raw_addy):
+        return ' '.join(
+            raw_addy.split()
+        ).strip().title()

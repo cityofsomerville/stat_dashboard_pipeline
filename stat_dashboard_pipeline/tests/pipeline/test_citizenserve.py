@@ -48,7 +48,9 @@ class CitizenServePipelineTest(unittest.TestCase):
         'Status': "Issued",
         'PermitAmount': 278.00,
         'Latitude': 0,
-        'Longitude': 0
+        'Longitude': 0,
+        'Address': '93  HIGHLAND   ave',
+        'ProjectName': 'REPLACE   SOMERSTAT DaTa DASHBOARD'
     }])
     @ddt.unpack
     def test_groom_permits(self, permit_data):
@@ -96,6 +98,17 @@ class CitizenServePipelineTest(unittest.TestCase):
             permit_dict['application_date'],
             application_date
         )
+        # Tests grooming as well
+        self.assertEqual(
+            permit_dict['work'],
+            'Replace somerstat data dashboard'
+        )
+        self.assertEqual(
+            permit_dict['address'],
+            '93 Highland Ave'
+        )
+
+
 
     @ddt.data([
         {
