@@ -15,10 +15,6 @@ class AnalyticsPipeline(GoogleAnalyticsClient):
         self.analytics = {}
         super().__init__()
 
-    # def run(self):
-    #     self.raw = self.ga_client.query()
-    #     self.groom()
-
     def groom_analytics(self):
         """
         Make a JSON dump for Socrata

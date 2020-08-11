@@ -44,13 +44,13 @@ stat_pipeline -m
 ```
 
 ## Run Unit Tests
-**NOTE:** These should run as acceptance tests in github
+**NOTE:** These also run as acceptance tests against pull requests in github
 ```
 python setup.py test
 ```
 
 ## Lint
-**NOTE:** These should run as acceptance tests in github
+**NOTE:** These run as acceptance tests against pull requests in github
 ```
 python setup.py lint
 ```
