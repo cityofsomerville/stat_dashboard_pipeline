@@ -22,10 +22,9 @@ CITIZENSERVE_UPDATE_WINDOW = 30
 INIT_UPDATE_WINDOW = 30
 
 LOGGING_FILE = 'stat_pipeline.log'
-LOG_LEVEL = logging.DEBUG
 logging.basicConfig(
     filename=os.path.join(os.path.dirname(ROOT_DIR), LOGGING_FILE),
-    level=LOG_LEVEL
+    level=logging.INFO
 )
 
 
