@@ -1,7 +1,7 @@
 requests == 2.22.0
 sodapy == 1.5.4
 pylint == 2.3.1
-paramiko == 2.6.0
+paramiko == 2.10.1
 pyyaml == 5.3
 freezegun == 0.3.12
 ddt == 1.2.2
